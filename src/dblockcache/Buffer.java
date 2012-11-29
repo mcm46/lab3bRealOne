@@ -10,18 +10,12 @@ public class Buffer extends DBuffer
 {
 	//is the data in the Buffer valid?
 	private boolean myValid = false;
-	//condition variable for validity
-	//private Object myValidCV = new Object();
 	
 	//has the buffer been modified (does it need to be written back?)
 	private boolean myClean = false;
-	//condition variable for cleanliness
-	//private Object myCleanCV = new Object();
 	
 	//is the buffer busy (is it being used by someone?)
 	private boolean myBusy = false;
-	//condition variable for busy
-	//private Object myBusyCV = new Object();
 	
 	//byte array containing the data associated with this buffer for retrieval by the disk
 	private byte[] myBuffer;

@@ -10,8 +10,9 @@ public class Cache extends DBufferCache
 	private LinkedList<DBuffer> myCache;
 	private LinkedList<Boolean> myHeldBuffers;
 	private int myCacheSize = 0;
-	
-	public Cache(int cacheSize)
+	private static Cache mySingleton;
+	private static final int CACHE_SIZE = 10;
+	private Cache(int cacheSize)
 	{
 		myCacheSize = cacheSize;
 		myCache = new LinkedList<DBuffer>();
@@ -24,6 +25,17 @@ public class Cache extends DBufferCache
 			myHeldBuffers.add(false);
 		}
 	}
+	
+	public Cache getInstance()
+	{
+		if(mySingleton == null)
+		{
+			mySingleton = new Cache(CACHE_SIZE);
+		}
+		
+		return mySingleton;
+	}
+	
 
 	@Override
 	public synchronized DBuffer getBlock(int blockID)
@@ -116,7 +128,6 @@ public class Cache extends DBufferCache
 				}
 			}
 
-
 			return myCache.peekLast();
 		}
 	}
@@ -141,9 +152,21 @@ public class Cache extends DBufferCache
 	{
 		for(DBuffer buffer : myCache)
 		{
-			//write back the buffer if it is valid but not clean
+			//write back the buffer if it is valid but not clean, wait if it is held
 			if(!buffer.checkClean() && buffer.checkValid())
 			{
+				while(myHeldBuffers.get(myCache.indexOf(buffer)))
+				{
+					try 
+					{
+						wait();
+					} 
+					catch (InterruptedException e) 
+					{
+						System.out.println("There was an error waiting in the sync() method.");
+					}
+				}
+				
 				buffer.startPush();
 				buffer.waitClean();
 			}
