@@ -1,6 +1,8 @@
 package dfs;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import common.Constants;
 import common.DFileID;
@@ -9,6 +11,7 @@ public abstract class DFS
 {
 	private boolean _format;
 	private String _volName;
+	private Map<DFileID, byte[]> dFileToBuffMap = new HashMap<DFileID, byte[]>();
 
 	DFS(String volName, boolean format) {
 		_volName = volName;
