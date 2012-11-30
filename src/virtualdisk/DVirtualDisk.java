@@ -7,7 +7,6 @@ import java.util.Map;
 
 import common.Constants.DiskOperationType;
 import common.Constants;
-import common.DFileID;
 
 import dblockcache.DBuffer;
 
@@ -70,7 +69,6 @@ public class DVirtualDisk extends VirtualDisk
 		if(operation==DiskOperationType.WRITE)
 		{
 			mySingleton.writeBlock(buf);
-			
 		}
 		else
 		{
