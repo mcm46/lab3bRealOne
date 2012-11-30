@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import common.Constants;
 import common.DFileID;
 import dblockcache.Cache;
 import dblockcache.DBuffer;
@@ -14,15 +15,13 @@ public class FileSystem extends DFS {
 
     private static FileSystem mySingleton;
     public HashMap<Integer, Boolean> availFileId = new HashMap<Integer, Boolean>();
-    private HashMap<DFileID, Integer> fileIdToINodeMap = new HashMap<DFileID, Integer>();
-    private static int maxFiles = 511;
     
     public FileSystem getInstance()
     {
 	if (mySingleton == null)
 	{
 	    mySingleton = new FileSystem();
-	    for (int x=0; x<maxFiles; x++)
+	    for (int x=0; x<Constants.MAX_FILES; x++)
 	    {
 		availFileId.put(x, false);
 	    }
@@ -40,7 +39,7 @@ public class FileSystem extends DFS {
 
     @Override
     public DFileID createDFile() {
-	for (int x=0; x<maxFiles; x++)
+	for (int x=0; x<Constants.MAX_FILES; x++)
 	{
 	    if (availFileId.get(x) == false)
 	    {
@@ -70,7 +69,14 @@ public class FileSystem extends DFS {
 	Cache c = Cache.getInstance();
 	int x = (dFID.getIntId() % 4) + 1;
 	DBuffer b = c.getBlock(x);
-	byte [] dummyBuf = 
+	b.startFetch();
+	byte [] dummyBuf = new byte [Constants.BLOCK_SIZE];
+	int startDummyRead = 0;
+	b.read(dummyBuf, startDummyRead, Constants.BLOCK_SIZE);
+	int numBlocksToUse = count % Constants.BLOCK_SIZE;
+	
+	
+	
 	return 0;
     }
 

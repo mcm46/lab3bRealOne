@@ -11,7 +11,6 @@ public abstract class DFS
 {
 	private boolean _format;
 	private String _volName;
-	private Map<DFileID, byte[]> dFileToBuffMap = new HashMap<DFileID, byte[]>();
 
 	DFS(String volName, boolean format) {
 		_volName = volName;
