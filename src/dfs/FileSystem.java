@@ -8,6 +8,7 @@ import java.util.List;
 
 import common.DFileID;
 import dblockcache.Cache;
+import dblockcache.DBuffer;
 
 public class FileSystem extends DFS {
 
@@ -68,8 +69,8 @@ public class FileSystem extends DFS {
     public int write(DFileID dFID, byte[] buffer, int startOffset, int count) {
 	Cache c = Cache.getInstance();
 	int x = (dFID.getIntId() % 4) + 1;
-	c.getBlock(x);
-	
+	DBuffer b = c.getBlock(x);
+	byte [] dummyBuf = 
 	return 0;
     }
 
