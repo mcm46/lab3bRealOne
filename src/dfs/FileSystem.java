@@ -7,11 +7,29 @@ import java.util.HashMap;
 import java.util.List;
 
 import common.DFileID;
+import dblockcache.Cache;
 
 public class FileSystem extends DFS {
 
-    private ArrayList<Integer> fileIds = new ArrayList<Integer>();
-    private HashMap<DFileID, Integer> fileIdMap = new HashMap<DFileID, Integer>();
+    private static FileSystem mySingleton;
+    public HashMap<Integer, Boolean> availFileId = new HashMap<Integer, Boolean>();
+    private HashMap<DFileID, Integer> fileIdToINodeMap = new HashMap<DFileID, Integer>();
+    private static int maxFiles = 511;
+    
+    public FileSystem getInstance()
+    {
+	if (mySingleton == null)
+	{
+	    mySingleton = new FileSystem();
+	    for (int x=0; x<maxFiles; x++)
+	    {
+		availFileId.put(x, false);
+	    }
+	}
+	
+	return mySingleton;
+    }
+    
     
     @Override
     public boolean format() {
@@ -21,41 +39,37 @@ public class FileSystem extends DFS {
 
     @Override
     public DFileID createDFile() {
-	int x;
-	if (fileIds.size() == 0)
+	for (int x=0; x<maxFiles; x++)
 	{
-	    x = 0;
-	    fileIds.add(x);
+	    if (availFileId.get(x) == false)
+	    {
+		DFileID id = new DFileID(x);
+		availFileId.put(x, true);
+		return id;
+	    }
 	}
-	else
-	{
-	    x = Collections.max(fileIds) + 1;
-	    fileIds.add(x);
-	}
-	
-	//include a request to create a file on the disk --> method provided by the disk
-	
-	DFileID id = new DFileID(x);
-	fileIdMap.put(id, x);
-	return id;
+	return new DFileID(-1);
     }
 
     @Override
     public void destroyDFile(DFileID dFID) {
-	// a request to delete a file on the disk
-
+	int x = dFID.getIntId();
+	availFileId.put(x, false);
     }
 
     @Override
     public int read(DFileID dFID, byte[] buffer, int startOffset, int count) {
 	
-	// TODO Auto-generated method stub
+	
 	return 0;
     }
 
     @Override
     public int write(DFileID dFID, byte[] buffer, int startOffset, int count) {
-	// TODO Auto-generated method stub
+	Cache c = Cache.getInstance();
+	int x = (dFID.getIntId() % 4) + 1;
+	c.getBlock(x);
+	
 	return 0;
     }
 
