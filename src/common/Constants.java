@@ -12,4 +12,5 @@ public class Constants
 
 	/* Virtual disk file/store name */
 	public static final String vdiskName = "DSTORE.dat";
+	public static final int MAX_FILES = 512; //From Lab Handout
 }
