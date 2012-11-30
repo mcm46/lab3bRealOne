@@ -12,6 +12,7 @@ public class Cache extends DBufferCache
 	private int myCacheSize = 0;
 	private static Cache mySingleton;
 	private static final int CACHE_SIZE = 10;
+	
 	private Cache(int cacheSize)
 	{
 		myCacheSize = cacheSize;
@@ -26,7 +27,7 @@ public class Cache extends DBufferCache
 		}
 	}
 	
-	public Cache getInstance()
+	public static Cache getInstance()
 	{
 		if(mySingleton == null)
 		{
@@ -58,8 +59,7 @@ public class Cache extends DBufferCache
 					}
 					catch (InterruptedException e)
 					{
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						System.out.println("There was an error waiting in the getBlock() method.");
 					}
 				}
 				buffer = myCache.remove(i);
@@ -98,7 +98,7 @@ public class Cache extends DBufferCache
 					myCache.addLast(new Buffer(blockID, Constants.BLOCK_SIZE));
 					myHeldBuffers.addLast(true);
 					foundBlock = true;
-
+					break;
 				}
 			}
 
