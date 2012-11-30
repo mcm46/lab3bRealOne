@@ -7,7 +7,6 @@ import java.util.Map;
 
 import common.Constants.DiskOperationType;
 import common.Constants;
-import common.DFileID;
 
 import dblockcache.DBuffer;
 
@@ -25,15 +24,22 @@ public class DVirtualDisk extends VirtualDisk
 			
 		}
 		myBitmap= new HashMap<Integer,Boolean>();
+		int f_id=0;
 		for(int i=Constants.BLOCK_SIZE;i<Constants.MAX_FILES;i+=inodeSize)
 		{
 			byte[] fileBytes= new byte[32];
 			mySingleton._file.read(fileBytes,0,32);
 			int fileId=byteArrayToInt(fileBytes);
-			myBitmap.put(fileId, fileId!=0);
+			myBitmap.put(f_id, fileId!=0);
+			f_id++;
 		}
 		return mySingleton;
 	}
+//	
+//	public void printMap()
+//	{
+//		for(int i=0;)
+//	}
 	
 	//Helper function
 	private static int byteArrayToInt(byte[] b) 
@@ -70,7 +76,6 @@ public class DVirtualDisk extends VirtualDisk
 		if(operation==DiskOperationType.WRITE)
 		{
 			mySingleton.writeBlock(buf);
-			
 		}
 		else
 		{
