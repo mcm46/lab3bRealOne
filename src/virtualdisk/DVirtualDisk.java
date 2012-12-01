@@ -23,7 +23,7 @@ public class DVirtualDisk extends VirtualDisk
 	private ConcurrentLinkedQueue<DBuffer> buffers;
 	private ConcurrentLinkedQueue<DiskOperationType> operations; 
 		
-	public static DVirtualDisk getInstance() throws IOException
+	public static synchronized DVirtualDisk getInstance() throws IOException
 	{
 
 		if(mySingleton == null)
@@ -118,7 +118,6 @@ public class DVirtualDisk extends VirtualDisk
 		iNodesPerBlock= Constants.BLOCK_SIZE/inodeSize;
 		iNodeBlocks=Constants.MAX_FILES/iNodesPerBlock;
 		populateBitmap();
-		executeRequests();
 	}
 	
 	private DVirtualDisk(String volName, boolean format) throws IOException
@@ -131,7 +130,7 @@ public class DVirtualDisk extends VirtualDisk
 		super(format);
 	}
 	
-	private void executeRequests()
+	public void executeRequests()
 	{
 		while(true)
 		{
