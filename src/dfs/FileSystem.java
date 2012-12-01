@@ -86,6 +86,11 @@ public class FileSystem extends DFS {
 	int actualINodeStart = dummyBuf[dFID.getIntId() - 4*(x-1)];
 	byte [] changedHasFile = new byte [4];
 	byte [] changedId = new byte [4];
+	byte [] changedSize = new byte [4];
+	changedHasFile = toBytes(1);
+	changedId = toBytes(dFID.getIntId());
+	changedSize = toBytes(count);
+	
 	
 	
 	
