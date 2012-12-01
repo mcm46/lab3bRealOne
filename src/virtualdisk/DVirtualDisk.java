@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import common.Constants.DiskOperationType;
 import common.Constants;
@@ -19,12 +20,15 @@ public class DVirtualDisk extends VirtualDisk
 	private static int inodeSize=212;
 	public static int iNodesPerBlock;
 	
+	private ConcurrentLinkedQueue<DBuffer> buffers;
+	private ConcurrentLinkedQueue<DiskOperationType> operations; 
+		
 	public static DVirtualDisk getInstance() throws IOException
 	{
 
 		if(mySingleton == null)
 		{
-			mySingleton = new DVirtualDisk(true);
+			mySingleton = new DVirtualDisk();
 			
 		}
 		
@@ -114,6 +118,7 @@ public class DVirtualDisk extends VirtualDisk
 		iNodesPerBlock= Constants.BLOCK_SIZE/inodeSize;
 		iNodeBlocks=Constants.MAX_FILES/iNodesPerBlock;
 		populateBitmap();
+		executeRequests();
 	}
 	
 	private DVirtualDisk(String volName, boolean format) throws IOException
@@ -126,21 +131,45 @@ public class DVirtualDisk extends VirtualDisk
 		super(format);
 	}
 	
+	private void executeRequests()
+	{
+		while(true)
+		{
+			if (buffers.isEmpty())
+			{
+				continue;
+			}
+			DBuffer buf=buffers.poll();
+			DiskOperationType operation= operations.poll();
+			if (operation==DiskOperationType.WRITE)
+			{
+				try {
+					writeBlock(buf);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			else
+			{
+				try {
+					readBlock(buf);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			buf.ioComplete();
+		}
 
+	}
 
+	
 	@Override
 	public void startRequest(DBuffer buf, DiskOperationType operation)
 			throws IllegalArgumentException, IOException
 	{
-		if(operation==DiskOperationType.WRITE)
-		{
-			mySingleton.writeBlock(buf);
-		}
-		else
-		{
-			mySingleton.readBlock(buf);
-		}
-		buf.ioComplete();
+		buffers.add(buf);
+		operations.add(operation);
 	}
+	
 
 }
