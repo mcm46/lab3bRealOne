@@ -26,6 +26,6 @@ public class Main
 		DiskThread thread = new DiskThread();
 		thread.start();
 		
-		int test = 0;
+		int test = 1;
 	}
 }
