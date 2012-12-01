@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import virtualdisk.DVirtualDisk;
+
 import common.Constants;
 import common.DFileID;
 import dblockcache.Cache;
@@ -16,15 +18,20 @@ public class FileSystem extends DFS {
     private static FileSystem mySingleton;
     public HashMap<Integer, Boolean> availFileId = new HashMap<Integer, Boolean>();
     
-    public FileSystem getInstance()
+    public FileSystem()
     {
-	if (mySingleton == null)
-	{
-	    mySingleton = new FileSystem();
 	    for (int x=0; x<Constants.MAX_FILES; x++)
 	    {
 		availFileId.put(x, false);
 	    }
+    }
+    
+    
+    public static FileSystem getInstance()
+    {
+	if (mySingleton == null)
+	{
+	    mySingleton = new FileSystem();
 	}
 	
 	return mySingleton;
@@ -70,10 +77,16 @@ public class FileSystem extends DFS {
 	int x = (dFID.getIntId() % 4) + 1;
 	DBuffer b = c.getBlock(x);
 	b.startFetch();
+	b.waitClean();
 	byte [] dummyBuf = new byte [Constants.BLOCK_SIZE];
 	int startDummyRead = 0;
 	b.read(dummyBuf, startDummyRead, Constants.BLOCK_SIZE);
-	int numBlocksToUse = count % Constants.BLOCK_SIZE;
+	int numBlocksToUse = count / Constants.BLOCK_SIZE;
+	//DVirtualDisk.myBitmap.put(dFID.getIntId(), true);
+	int actualINodeStart = dummyBuf[dFID.getIntId() - 4*(x-1)];
+	byte [] changedHasFile = new byte [4];
+	byte [] changedId = new byte [4];
+	
 	
 	
 	
@@ -90,6 +103,18 @@ public class FileSystem extends DFS {
     public List<DFileID> listAllDFiles() {
 	// TODO Auto-generated method stub
 	return null;
+    }
+    
+    private byte[] toBytes(int i)
+    {
+      byte[] result = new byte[4];
+
+      result[0] = (byte) (i >> 24);
+      result[1] = (byte) (i >> 16);
+      result[2] = (byte) (i >> 8);
+      result[3] = (byte) (i);
+
+      return result;
     }
 
 }
