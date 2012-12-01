@@ -22,10 +22,20 @@ public class Main
 			e.printStackTrace();
 		}
 		
+<<<<<<< HEAD
 		//start the disk execute thread
 		DiskThread thread = new DiskThread();
 		thread.start();
 		
 		int test = 0;
+=======
+		DiskThread thread = new DiskThread();
+		thread.start();
+		
+		int test=0;
+		
+		
+		
+>>>>>>> commits
 	}
 }
