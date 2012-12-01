@@ -27,7 +27,7 @@ public class Cache extends DBufferCache
 		}
 	}
 	
-	public static Cache getInstance()
+	public synchronized static Cache getInstance()
 	{
 		if(mySingleton == null)
 		{
@@ -105,13 +105,15 @@ public class Cache extends DBufferCache
 			//if none of the blocks fit the criterion, wait until a block is freed
 			if(!foundBlock)
 			{
-				try
+				while(myHeldBuffers.indexOf(false) != -1)
 				{
-					wait();
-				} catch (InterruptedException e)
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					try
+					{
+						wait();
+					} catch (InterruptedException e)
+					{
+						System.out.println("There was an error waiting in the getBlock() method at the second wait.");
+					}
 				}
 
 				//now that we know a block is free, find it, write it back and evict it

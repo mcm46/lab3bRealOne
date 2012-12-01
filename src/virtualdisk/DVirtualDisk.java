@@ -28,7 +28,7 @@ public class DVirtualDisk extends VirtualDisk
 
 		if(mySingleton == null)
 		{
-			mySingleton = new DVirtualDisk();
+			mySingleton = new DVirtualDisk(false);
 			
 		}
 		
@@ -115,6 +115,8 @@ public class DVirtualDisk extends VirtualDisk
 	private DVirtualDisk() throws FileNotFoundException, IOException
 	{
 		super();
+		buffers = new ConcurrentLinkedQueue();
+		operations = new ConcurrentLinkedQueue();
 		iNodesPerBlock= Constants.BLOCK_SIZE/inodeSize;
 		iNodeBlocks=Constants.MAX_FILES/iNodesPerBlock;
 		populateBitmap();
@@ -123,11 +125,15 @@ public class DVirtualDisk extends VirtualDisk
 	private DVirtualDisk(String volName, boolean format) throws IOException
 	{
 		super(volName, format);
+		buffers = new ConcurrentLinkedQueue();
+		operations = new ConcurrentLinkedQueue();
 	}
 	
 	private DVirtualDisk(boolean format) throws IOException
 	{
 		super(format);
+		buffers = new ConcurrentLinkedQueue();
+		operations = new ConcurrentLinkedQueue();
 	}
 	
 	public void executeRequests()

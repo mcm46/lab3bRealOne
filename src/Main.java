@@ -11,19 +11,21 @@ public class Main
 {
 	private static Cache myCache;
 	private static DVirtualDisk myDisk;
+	
 	public static void main(String[] args)
 	{
-		//myCache = Cache.getInstance();
-		
-		//DBuffer test = myCache.getBlock(10);
+		//construct the disk
 		try {
-			myDisk=DVirtualDisk.getInstance();
+			myDisk = DVirtualDisk.getInstance();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
+		//start the disk execute thread
+		DiskThread thread = new DiskThread();
+		thread.start();
 		
-		
+		int test = 0;
 	}
 }
