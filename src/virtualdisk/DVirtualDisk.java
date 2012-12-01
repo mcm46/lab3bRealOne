@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import common.Constants.DiskOperationType;
 import common.Constants;
@@ -15,7 +16,7 @@ public class DVirtualDisk extends VirtualDisk
 {
 	private static DVirtualDisk mySingleton;
 	public static Map<Integer,Boolean> myBitmap;
-	private static int inodeBlocks;
+	private static int iNodeBlocks;
 	private static int inodeSize=212;
 	public static int iNodesPerBlock;
 	
@@ -24,7 +25,7 @@ public class DVirtualDisk extends VirtualDisk
 
 		if(mySingleton == null)
 		{
-			mySingleton = new DVirtualDisk();
+			mySingleton = new DVirtualDisk(true);
 			
 		}
 		
@@ -35,12 +36,11 @@ public class DVirtualDisk extends VirtualDisk
 	private void populateBitmap()
 	{
 		myBitmap= new HashMap<Integer,Boolean>();
-		for(int i=inodeBlocks+1;i<Constants.NUM_OF_BLOCKS;i++)
+		for(int i=iNodeBlocks+1;i<Constants.NUM_OF_BLOCKS;i++)
 		{
 			myBitmap.put(i,false);
 		}
-		
-		for(int i=Constants.BLOCK_SIZE;i<inodeBlocks*Constants.BLOCK_SIZE+Constants.BLOCK_SIZE;i+=Constants.BLOCK_SIZE)
+		for(int i=Constants.BLOCK_SIZE;i<iNodeBlocks*Constants.BLOCK_SIZE+Constants.BLOCK_SIZE;i+=Constants.BLOCK_SIZE)
 		{
 			for (int j=0;j<iNodesPerBlock*inodeSize;j+=inodeSize)
 			{
@@ -50,6 +50,7 @@ public class DVirtualDisk extends VirtualDisk
 
 					byte[] b = new byte[4];
 					try {
+						System.out.println(i+j+k);
 						_file.read(b, i+j+k, 4);
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -112,7 +113,7 @@ public class DVirtualDisk extends VirtualDisk
 	{
 		super();
 		iNodesPerBlock= Constants.BLOCK_SIZE/inodeSize;
-		
+		iNodeBlocks=Constants.MAX_FILES/iNodesPerBlock;
 		populateBitmap();
 	}
 	
