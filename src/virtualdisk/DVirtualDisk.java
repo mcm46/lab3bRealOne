@@ -81,7 +81,6 @@ public class DVirtualDisk extends VirtualDisk
 						case(12):
 						{
 							continue;
-							break;	
 						}
 						default:
 						{
