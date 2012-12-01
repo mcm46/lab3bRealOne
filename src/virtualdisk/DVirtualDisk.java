@@ -47,8 +47,7 @@ public class DVirtualDisk extends VirtualDisk
 				boolean setFileUsed=false;
 				for (int k=0;k<inodeSize;k+=4)
 				{
-					int block_id;
-					int f_id;
+
 					byte[] b = new byte[4];
 					try {
 						_file.read(b, i+j+k, 4);
