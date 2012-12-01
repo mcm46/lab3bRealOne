@@ -9,13 +9,14 @@ import common.Constants.DiskOperationType;
 import common.Constants;
 
 import dblockcache.DBuffer;
+import dfs.FileSystem;
 
 public class DVirtualDisk extends VirtualDisk
 {
 	private static DVirtualDisk mySingleton;
 	public static Map<Integer,Boolean> myBitmap;
 	private static int inodeBlocks;
-	private static int inodeSize=208;
+	private static int inodeSize=212;
 	public static int iNodesPerBlock;
 	
 	public static DVirtualDisk getInstance() throws IOException
@@ -36,13 +37,14 @@ public class DVirtualDisk extends VirtualDisk
 		myBitmap= new HashMap<Integer,Boolean>();
 		for(int i=inodeBlocks+1;i<Constants.NUM_OF_BLOCKS;i++)
 		{
-			myBitmap.put(i,true);
+			myBitmap.put(i,false);
 		}
 		
 		for(int i=Constants.BLOCK_SIZE;i<inodeBlocks*Constants.BLOCK_SIZE+Constants.BLOCK_SIZE;i+=Constants.BLOCK_SIZE)
 		{
 			for (int j=0;j<iNodesPerBlock*inodeSize;j+=inodeSize)
 			{
+				boolean setFileUsed=false;
 				for (int k=0;k<inodeSize;k+=4)
 				{
 					int block_id;
@@ -60,18 +62,33 @@ public class DVirtualDisk extends VirtualDisk
 					{
 						case(0):
 						{
-							f_id=id;
-							
+							if(id!=0)
+							{
+								setFileUsed=true;
+							}
 							break;
 						}
 						case(4):
 						{
-							continue;
+							if(setFileUsed)
+							{
+								FileSystem fs= FileSystem.getInstance();
+								fs.availFileId.put(id,true);
+								setFileUsed=false;
+							}
 							break;
+						}
+						case(12):
+						{
+							continue;
+							break;	
 						}
 						default:
 						{
-							block_id=id;
+							if(id!=0)
+							{
+								myBitmap.put(id, true);
+							}
 							break;
 						}
 					}
@@ -79,7 +96,6 @@ public class DVirtualDisk extends VirtualDisk
 				}
 			}
 			
-			System.out.println(f_id+" : "+myBitmap.get(f_id));
 		}
 	}
 	//Helper function
