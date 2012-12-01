@@ -95,6 +95,7 @@ public class DVirtualDisk extends VirtualDisk
 			}
 			
 		}
+		System.out.print(myBitmap);
 	}
 	//Helper function
 	private static int byteArrayToInt(byte[] b) 
