@@ -14,33 +14,74 @@ public class DVirtualDisk extends VirtualDisk
 {
 	private static DVirtualDisk mySingleton;
 	public static Map<Integer,Boolean> myBitmap;
-	private static int inodeSize= 256;
+	private static int inodeBlocks;
+	private static int inodeSize=208;
+	public static int iNodesPerBlock;
 	
 	public static DVirtualDisk getInstance() throws IOException
 	{
+
 		if(mySingleton == null)
 		{
 			mySingleton = new DVirtualDisk();
 			
 		}
-		myBitmap= new HashMap<Integer,Boolean>();
-		int f_id=0;
-		for(int i=Constants.BLOCK_SIZE;i<Constants.MAX_FILES;i+=inodeSize)
-		{
-			byte[] fileBytes= new byte[32];
-			mySingleton._file.read(fileBytes,0,32);
-			int fileId=byteArrayToInt(fileBytes);
-			myBitmap.put(f_id, fileId!=0);
-			f_id++;
-		}
+		
 		return mySingleton;
 	}
-//	
-//	public void printMap()
-//	{
-//		for(int i=0;)
-//	}
 	
+
+	private void populateBitmap()
+	{
+		myBitmap= new HashMap<Integer,Boolean>();
+		for(int i=inodeBlocks+1;i<Constants.NUM_OF_BLOCKS;i++)
+		{
+			myBitmap.put(i,true);
+		}
+		
+		for(int i=Constants.BLOCK_SIZE;i<inodeBlocks*Constants.BLOCK_SIZE+Constants.BLOCK_SIZE;i+=Constants.BLOCK_SIZE)
+		{
+			for (int j=0;j<iNodesPerBlock*inodeSize;j+=inodeSize)
+			{
+				for (int k=0;k<inodeSize;k+=4)
+				{
+					int block_id;
+					int f_id;
+					byte[] b = new byte[4];
+					try {
+						_file.read(b, i+j+k, 4);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					int id=byteArrayToInt(b);
+					
+					switch(k)
+					{
+						case(0):
+						{
+							f_id=id;
+							
+							break;
+						}
+						case(4):
+						{
+							continue;
+							break;
+						}
+						default:
+						{
+							block_id=id;
+							break;
+						}
+					}
+					
+				}
+			}
+			
+			System.out.println(f_id+" : "+myBitmap.get(f_id));
+		}
+	}
 	//Helper function
 	private static int byteArrayToInt(byte[] b) 
 	{
@@ -55,6 +96,9 @@ public class DVirtualDisk extends VirtualDisk
 	private DVirtualDisk() throws FileNotFoundException, IOException
 	{
 		super();
+		iNodesPerBlock= Constants.BLOCK_SIZE/inodeSize;
+		
+		populateBitmap();
 	}
 	
 	private DVirtualDisk(String volName, boolean format) throws IOException

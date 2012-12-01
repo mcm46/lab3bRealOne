@@ -17,7 +17,7 @@ public class Main
 		
 		//DBuffer test = myCache.getBlock(10);
 		try {
-			myDisk=myDisk.getInstance();
+			myDisk=DVirtualDisk.getInstance();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
