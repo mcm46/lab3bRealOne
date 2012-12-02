@@ -17,7 +17,7 @@ public class DVirtualDisk extends VirtualDisk
 	private static DVirtualDisk mySingleton;
 	public static Map<Integer,Boolean> myBitmap;
 	private static int iNodeBlocks;
-	private static int inodeSize=212;
+	public static int inodeSize=212;
 	public static int iNodesPerBlock;
 	
 	private ConcurrentLinkedQueue<DBuffer> buffers;
@@ -43,63 +43,63 @@ public class DVirtualDisk extends VirtualDisk
 		{
 			myBitmap.put(i,false);
 		}
-		for(int i=Constants.BLOCK_SIZE;i<iNodeBlocks*Constants.BLOCK_SIZE+Constants.BLOCK_SIZE;i+=Constants.BLOCK_SIZE)
-		{
-			for (int j=0;j<iNodesPerBlock*inodeSize;j+=inodeSize)
-			{
-				boolean setFileUsed=false;
-				for (int k=0;k<inodeSize;k+=4)
-				{
-
-					byte[] b = new byte[4];
-					try {
-						System.out.println(i+j+k);
-						_file.read(b, i+j+k, 4);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					int id=byteArrayToInt(b);
-					
-					switch(k)
-					{
-						case(0):
-						{
-							if(id!=0)
-							{
-								setFileUsed=true;
-							}
-							break;
-						}
-						case(4):
-						{
-							if(setFileUsed)
-							{
-								FileSystem fs= FileSystem.getInstance();
-								fs.availFileId.put(id,true);
-								setFileUsed=false;
-							}
-							break;
-						}
-						case(12):
-						{
-							continue;
-						}
-						default:
-						{
-							if(id!=0)
-							{
-								myBitmap.put(id, true);
-							}
-							break;
-						}
-					}
-					
-				}
-			}
+//		for(int i=Constants.BLOCK_SIZE;i<iNodeBlocks*Constants.BLOCK_SIZE+Constants.BLOCK_SIZE;i+=Constants.BLOCK_SIZE)
+//		{
+//			for (int j=0;j<iNodesPerBlock*inodeSize;j+=inodeSize)
+//			{
+//				boolean setFileUsed=false;
+//				for (int k=0;k<inodeSize;k+=4)
+//				{
+//
+//					byte[] b = new byte[4];
+//					try {
+//						System.out.println(i+j+k);
+//						_file.read(b, i+j+k, 4);
+//					} catch (IOException e) {
+//						// TODO Auto-generated catch block
+//						e.printStackTrace();
+//					}
+//					int id=byteArrayToInt(b);
+//					
+//					switch(k)
+//					{
+//						case(0):
+//						{
+//							if(id!=0)
+//							{
+//								setFileUsed=true;
+//							}
+//							break;
+//						}
+//						case(4):
+//						{
+//							if(setFileUsed)
+//							{
+//								FileSystem fs= FileSystem.getInstance();
+//								fs.availFileId.put(id,true);
+//								setFileUsed=false;
+//							}
+//							break;
+//						}
+//						case(12):
+//						{
+//							continue;
+//						}
+//						default:
+//						{
+//							if(id!=0)
+//							{
+//								myBitmap.put(id, true);
+//							}
+//							break;
+//						}
+//					}
+//					
+//				}
+//			}
 			
-		}
-		System.out.print(myBitmap);
+		//}
+		//System.out.print(myBitmap);
 	}
 	//Helper function
 	private static int byteArrayToInt(byte[] b) 
@@ -127,6 +127,9 @@ public class DVirtualDisk extends VirtualDisk
 		super(volName, format);
 		buffers = new ConcurrentLinkedQueue();
 		operations = new ConcurrentLinkedQueue();
+		iNodesPerBlock= Constants.BLOCK_SIZE/inodeSize;
+		iNodeBlocks=Constants.MAX_FILES/iNodesPerBlock;
+		populateBitmap();
 	}
 	
 	private DVirtualDisk(boolean format) throws IOException
@@ -134,6 +137,9 @@ public class DVirtualDisk extends VirtualDisk
 		super(format);
 		buffers = new ConcurrentLinkedQueue();
 		operations = new ConcurrentLinkedQueue();
+		iNodesPerBlock= Constants.BLOCK_SIZE/inodeSize;
+		iNodeBlocks=Constants.MAX_FILES/iNodesPerBlock;
+		populateBitmap();
 	}
 	
 	public void executeRequests()

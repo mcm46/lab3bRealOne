@@ -28,7 +28,7 @@ public class FileSystem extends DFS {
     }
     
     
-    public static FileSystem getInstance()
+    public synchronized static FileSystem getInstance()
     {
 	if (mySingleton == null)
 	{
@@ -64,101 +64,202 @@ public class FileSystem extends DFS {
     public void destroyDFile(DFileID dFID) {
 	int x = dFID.getIntId();
 	availFileId.put(x, false);
+	allFiles.remove(dFID);
     }
 
     @Override
-    public int read(DFileID dFID, byte[] buffer, int startOffset, int count) {
-	
-	Cache c = Cache.getInstance();
-	int x = (dFID.getIntId() % DVirtualDisk.iNodesPerBlock) + 1;
-	DBuffer b = c.getBlock(x);
-	b.startFetch();
-	b.waitClean();
-	byte [] dummyBuf = new byte [Constants.BLOCK_SIZE];
-	int startDummyRead = 0;
-	b.read(dummyBuf, startDummyRead, Constants.BLOCK_SIZE);
-	int numBlocksToUse = count / Constants.BLOCK_SIZE;
-	int actualINodeStart = dummyBuf[dFID.getIntId() -DVirtualDisk.iNodesPerBlock*(x-1)];
-	byte [] INodeArray = Arrays.copyOfRange(dummyBuf, actualINodeStart, actualINodeStart+Constants.BLOCK_SIZE);
-	for (int y=0; y<numBlocksToUse; y++)
-	{
-	    byte [] pointerArray = new byte[4];
-	    pointerArray = Arrays.copyOfRange(INodeArray, 12 + 4*y, 16 + 4*y);
-	    int pointer = byteArrayToInt(pointerArray);
-	    b = c.getBlock(pointer);
-	    b.read(buffer, Constants.BLOCK_SIZE*y, Constants.BLOCK_SIZE);
-	}
-	
-	c.releaseBlock(b);
-	return count;
+    public int read(DFileID dFID, byte[] buffer, int startOffset, int count) 
+    {
+    	try
+    	{
+    		//get the cache instance
+    		Cache c = Cache.getInstance();
+
+    		//get the block number of the inode
+    		int iNodeBlock = (dFID.getIntId() / DVirtualDisk.iNodesPerBlock) + 1;
+
+    		//get that block
+    		DBuffer inodeBuffer = c.getBlock(iNodeBlock);
+
+    		//buffer to hold the inode data
+    		byte [] inodeBlockData = new byte [Constants.BLOCK_SIZE];
+
+    		//read the inode data into the buffer
+    		inodeBuffer.read(inodeBlockData, 0, Constants.BLOCK_SIZE);
+
+    		//figure out how many blocks we are going to have to read
+    		int numBlocksToUse = (int)Math.ceil((double)count / Constants.BLOCK_SIZE);
+
+    		//find the start of the inode within the inode block
+    		int actualINodeStart = (dFID.getIntId() - DVirtualDisk.iNodesPerBlock * (iNodeBlock - 1)) * DVirtualDisk.inodeSize;
+
+
+    		for (int y=0; y<numBlocksToUse; y++)
+    		{
+    			//create an buffer to hold the int for the next block to be read
+    			byte [] pointerArray = new byte[4];
+
+    			//copy data into the buffer
+    			pointerArray = Arrays.copyOfRange(inodeBlockData, actualINodeStart + 12 + 4 * y, actualINodeStart + 16 + 4 * y);
+
+    			//convert the data into a pointer for the next block to read
+    			int pointer = byteArrayToInt(pointerArray);
+
+    			//get the block with the requested data
+    			DBuffer readBuffer = c.getBlock(pointer);
+
+    			//figure out how much to read, read that data into the passed buffer
+    			if(buffer.length - (startOffset + Constants.BLOCK_SIZE * y) >= Constants.BLOCK_SIZE)
+    			{
+    				readBuffer.read(buffer, startOffset + Constants.BLOCK_SIZE * y, Constants.BLOCK_SIZE);
+    			}
+    			else
+    			{
+    				readBuffer.read(buffer, startOffset + Constants.BLOCK_SIZE * y, buffer.length - (startOffset + Constants.BLOCK_SIZE * y));
+    			}
+    			//release the current block we are reading from
+    			c.releaseBlock(readBuffer);
+    		}
+    		
+    		//release the inode block, return the number of bytes written, if there is 
+    		//an exception catch it and return -1
+    		c.releaseBlock(inodeBuffer);
+    		return count;
+    	}
+    	catch(Exception e)
+    	{
+    		return -1;
+    	}
     }
 
     @Override
-    public int write(DFileID dFID, byte[] buffer, int startOffset, int count) {
-	
-	Cache c = Cache.getInstance();
-	int x = (dFID.getIntId() % DVirtualDisk.iNodesPerBlock) + 1;
-	DBuffer b = c.getBlock(x);
-	b.startFetch();
-	b.waitClean();
-	byte [] dummyBuf = new byte [Constants.BLOCK_SIZE];
-	int startDummyRead = 0;
-	b.read(dummyBuf, startDummyRead, Constants.BLOCK_SIZE);
-	int numBlocksToUse = count / Constants.BLOCK_SIZE;
-	int actualINodeStart = dummyBuf[dFID.getIntId() -DVirtualDisk.iNodesPerBlock*(x-1)];
-	byte [] changedHasFile = new byte [4];
-	byte [] changedId = new byte [4];
-	byte [] changedSize = new byte [4];
-	changedHasFile = toBytes(1);
-	changedId = toBytes(dFID.getIntId());
-	changedSize = toBytes(numBlocksToUse);
-	for (int y=0; x<4; y++)
-	{
-	    dummyBuf[actualINodeStart + y] = changedHasFile[y];
-	    dummyBuf[actualINodeStart + 4 + y] = changedId[y];
-	    dummyBuf[actualINodeStart + 8 + y] = changedSize[y];
-	}
-	
-	for (int z=0; z<numBlocksToUse; z++)
-	{
-	    for (Integer xx: DVirtualDisk.myBitmap.keySet())
-	    {
-		    if (DVirtualDisk.myBitmap.get(xx) == false)
-		    {
-			b = c.getBlock(xx);
-			DVirtualDisk.myBitmap.put(xx, true);
-			b.write(buffer, startOffset + Constants.BLOCK_SIZE*z, Constants.BLOCK_SIZE);
-			byte [] changePointer = new byte [4];
-			changePointer = toBytes(xx);
-			for (int yy=0; yy<4; yy++)
-			{
-			    dummyBuf[actualINodeStart + 8 + (z+1)*4 + yy] = changePointer[yy];
-			}
-		    }
-		    break;
-	    }
-	}
-	c.releaseBlock(b);
-	return count;
+    public int write(DFileID dFID, byte[] buffer, int startOffset, int count) 
+    {
+    	try
+    	{
+    		//get the cache instance
+    		Cache c = Cache.getInstance();
+
+    		//figure out what block contains the inode for this file
+    		int iNodeBlock = (dFID.getIntId() / DVirtualDisk.iNodesPerBlock) + 1;
+
+    		//get that block
+    		DBuffer inodeBuffer = c.getBlock(iNodeBlock);
+
+    		//create a buffer to fill up and read in the inode data
+    		byte [] inodeBlockData = new byte [Constants.BLOCK_SIZE];
+    		inodeBuffer.read(inodeBlockData, 0, Constants.BLOCK_SIZE);
+
+    		//figure out how many blocks are required for the write
+    		int numBlocksToUse = (int)Math.ceil((double)count / Constants.BLOCK_SIZE);
+
+    		//find the actual start of the inode data for this particular file
+    		int actualINodeStart = (dFID.getIntId() - DVirtualDisk.iNodesPerBlock * (iNodeBlock - 1)) * DVirtualDisk.inodeSize;
+
+    		//buffers for the integer start of the inode, the inode is structured with a header of the form |validFile|fileID|fileSize|
+    		byte [] changedHasFile = new byte [4];
+    		byte [] changedId = new byte [4];
+    		byte [] changedSize = new byte [4];
+
+    		//load the buffers with the integer values
+    		changedHasFile = toBytes(1);
+    		changedId = toBytes(dFID.getIntId());
+    		changedSize = toBytes(numBlocksToUse);
+
+    		//write the data into the inode
+    		for (int y=0; y<4; y++)
+    		{
+    			inodeBlockData[actualINodeStart + y] = changedHasFile[y];
+    			inodeBlockData[actualINodeStart + 4 + y] = changedId[y];
+    			inodeBlockData[actualINodeStart + 8 + y] = changedSize[y];
+    		}
+
+    		//write the data into the blocks, updating the inode along the way to indicate
+    		//what blocks a files data occupies
+    		for (int z=0; z < numBlocksToUse; z++)
+    		{
+    			//find a free block
+    			for (Integer freeBlockNumber: DVirtualDisk.myBitmap.keySet())
+    			{
+    				if (DVirtualDisk.myBitmap.get(freeBlockNumber) == false)
+    				{
+    					//get an empty block to write to
+    					DBuffer writeBlock = c.getBlock(freeBlockNumber);
+
+    					//update the disk to indicate that that block is now used
+    					DVirtualDisk.myBitmap.put(freeBlockNumber, true);
+
+    					//write the correct part of the data to this buffer, check to see how much is left
+    					if(buffer.length - (startOffset + Constants.BLOCK_SIZE * z) >= Constants.BLOCK_SIZE)
+    					{
+    						writeBlock.write(buffer, startOffset + Constants.BLOCK_SIZE * z, Constants.BLOCK_SIZE);
+    					}
+    					else
+    					{
+    						writeBlock.write(buffer, startOffset + Constants.BLOCK_SIZE * z, buffer.length - (startOffset + Constants.BLOCK_SIZE * z));
+    					}
+
+    					//create an integer in byte form to update the inode that this block is now part of the file
+    					byte [] changePointer = new byte [4];
+    					changePointer = toBytes(freeBlockNumber);
+
+    					//write the inode block data
+    					for (int yy=0; yy<4; yy++)
+    					{
+    						inodeBlockData[actualINodeStart + 12 + z * 4 + yy] = changePointer[yy];
+    					}
+    					
+    					//we're done writing to this block, release it and break out of the loop
+    					c.releaseBlock(writeBlock);
+    					break;
+    				}
+    			}
+    		}
+    		
+    		//we're done writing, write the inode, release the inode and return how many bits are written, if there is an error 
+    		//catch it and return -1
+    		inodeBuffer.write(inodeBlockData, 0, Constants.BLOCK_SIZE);
+    		c.releaseBlock(inodeBuffer);
+    		return count;
+    	}
+    	catch(Exception e)
+    	{
+    		System.out.println("There was an error writing the file.");
+    		return -1;
+    	}
     }
 
     @Override
-    public int sizeDFile(DFileID dFID) {
-	
-	Cache c = Cache.getInstance();
-	int x = (dFID.getIntId() % DVirtualDisk.iNodesPerBlock) + 1;
-	DBuffer b = c.getBlock(x);
-	b.startFetch();
-	b.waitClean();
-	byte [] dummyBuf = new byte [Constants.BLOCK_SIZE];
-	int startDummyRead = 0;
-	b.read(dummyBuf, startDummyRead, Constants.BLOCK_SIZE);
-	int actualINodeStart = dummyBuf[dFID.getIntId() -DVirtualDisk.iNodesPerBlock*(x-1)];
-	byte [] INodeArray = Arrays.copyOfRange(dummyBuf, actualINodeStart, actualINodeStart+Constants.BLOCK_SIZE);
-	byte [] sizeArray = Arrays.copyOfRange(INodeArray, 8, 12);
-	int size = byteArrayToInt(sizeArray);	
-	
-	return size;
+    public int sizeDFile(DFileID dFID) 
+    {
+    	//get the cache instance
+    	Cache c = Cache.getInstance();
+
+    	//figure out which block the inode is actually in
+    	int iNodeBlock = (dFID.getIntId() / DVirtualDisk.iNodesPerBlock) + 1;
+
+    	//get the buffer corresponding to that block
+    	DBuffer inodeBuffer = c.getBlock(iNodeBlock);
+
+    	//byte array corresponding to the data in the inode block
+    	byte [] inodeBlockData = new byte [Constants.BLOCK_SIZE];
+
+    	//read the data into the buffer
+    	inodeBuffer.read(inodeBlockData, 0, Constants.BLOCK_SIZE);
+
+    	//find the start of the inode
+    	int actualINodeStart = (dFID.getIntId() - DVirtualDisk.iNodesPerBlock * (iNodeBlock - 1)) * DVirtualDisk.inodeSize;
+
+    	//get the data for the size integer
+    	byte[] sizeArray = Arrays.copyOfRange(inodeBlockData, actualINodeStart + 8, actualINodeStart + 12);
+
+    	//convert that data into an integer
+    	int size = byteArrayToInt(sizeArray);	
+
+    	//release the inode
+    	c.releaseBlock(inodeBuffer);
+    	
+    	return size;
     }
 
     @Override

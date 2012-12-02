@@ -1,6 +1,8 @@
 package dblockcache;
 
 import java.io.IOException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import common.Constants;
 
@@ -23,102 +25,20 @@ public class Buffer extends DBuffer
 	//the ID of the block that this buffer represents
 	private int myBlockID;
 	
-	//the number of readers waiting
-	private int myReadersWaiting;
+	private final ReentrantReadWriteLock myReentrantLock = new ReentrantReadWriteLock();
 	
-	//the total number of participants, -1 if one of them is a writer
-	private int myParticipants;
+	//the lock to acquire when reading
+	private final Lock readLock = myReentrantLock.readLock();
 	
-	//a condition variable for writers
-	private Object myWriteCV;
-	
-	//a condition variable for readers
-	private Object myReadCV;
-	
+	private final Lock writeLock = myReentrantLock.writeLock();
 	
 	public Buffer(int blockID, int bufferSize)
 	{
 		myBlockID = blockID;
 		myBuffer = new byte[bufferSize];
-		myWriteCV = new Object();
-		myReadCV = new Object();
 	}
 	
-	private void acquireWrite()
-	{
-		synchronized(myWriteCV)
-		{
-			while(myParticipants != 0)	//if there are writers or readers
-			{
-				try
-				{
-					myWriteCV.wait();
-				}
-				catch (InterruptedException e)
-				{
-					System.out.println("Error waiting in the acquireWait() method.");
-				}
-
-				myBusy = true;
-				myParticipants = -1;
-			}
-		}
-	}
 	
-	private void acquireRead()
-	{
-		synchronized(myReadCV)
-		{
-			while(myParticipants < 0)	//if there is a writer
-			{
-				myReadersWaiting++;
-				try
-				{
-					myReadCV.wait();
-				} catch (InterruptedException e)
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				myReadersWaiting--;
-
-				myParticipants++;
-			}
-		}
-	}
-	
-	private void releaseWrite()
-	{
-		synchronized(myWriteCV)
-		{
-			myParticipants = 0;
-			myBusy = false;
-			
-			if(myReadersWaiting > 0)
-			{
-				myReadCV.notifyAll();
-			}
-			else
-			{
-				myWriteCV.notify();
-			}
-		}
-	}
-	
-	private void releaseRead()
-	{
-		synchronized(myReadCV)
-		{
-			myParticipants--;
-			
-			if(myParticipants == 0)
-			{
-				myWriteCV.notify();
-			}
-		}
-	}
-	
-	//MAY ONLY NEED ONE CV?
 	@Override
 	public synchronized void startFetch()
 	{		
@@ -136,8 +56,6 @@ public class Buffer extends DBuffer
 		{
 			System.out.println("I/O Exception: " + e.getLocalizedMessage() + " was caught in the startFetch() method.");
 		}
-
-		//is it still busy until the fetch finishes?
 	}
 
 	@Override
@@ -220,7 +138,7 @@ public class Buffer extends DBuffer
 	//really this shouldn't be protected by a mutex unless there is a writer, does this need to be accounted for?
 	public int read(byte[] buffer, int startOffset, int count)
 	{
-		acquireRead();
+		readLock.lock();
 		
 		try
 		{
@@ -231,11 +149,11 @@ public class Buffer extends DBuffer
 		}
 		catch(Exception e)
 		{
-			releaseRead();
+			readLock.unlock();
 			return -1;
 		}
 		
-		releaseRead();
+		readLock.unlock();
 		
 		return count;
 	}
@@ -244,7 +162,7 @@ public class Buffer extends DBuffer
 	//update the busy status here, implement a read write lock
 	public int write(byte[] buffer, int startOffset, int count)
 	{
-		acquireWrite();
+		writeLock.lock();
 		
 		try
 		{
@@ -260,11 +178,11 @@ public class Buffer extends DBuffer
 		{
 			myClean = false;
 			myValid = false;
-			releaseWrite();
+			writeLock.unlock();
 			return -1;
 		}
 		
-		releaseWrite();
+		writeLock.unlock();
 		
 		return count;
 	}
