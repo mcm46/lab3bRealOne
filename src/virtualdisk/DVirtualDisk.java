@@ -31,7 +31,7 @@ public class DVirtualDisk extends VirtualDisk
 
 		if(mySingleton == null)
 		{
-			mySingleton = new DVirtualDisk(true);
+			mySingleton = new DVirtualDisk();
 		}
 		
 		return mySingleton;
@@ -42,7 +42,7 @@ public class DVirtualDisk extends VirtualDisk
 	 */
 	private void populateBitmap()
 	{
-		myBitmap= new HashMap<Integer,Boolean>();
+		myBitmap= new TreeMap<Integer,Boolean>();
 		for(int i=iNodeBlocks+1;i<Constants.NUM_OF_BLOCKS;i++)
 		{
 			myBitmap.put(i,false);
