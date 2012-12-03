@@ -24,6 +24,7 @@ public abstract class DBuffer
 	/* Check if buffer is evictable: not evictable if I/O in progress, or buffer is held */
 	public abstract boolean isBusy();
 
+	public boolean BLOCK_HELD = false;
 	/*
 	 * reads into the buffer[] array from the contents of the DBuffer. Check
 	 * first that the DBuffer has a valid copy of the data! startOffset and

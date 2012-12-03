@@ -307,6 +307,11 @@ public class FileSystem extends DFS {
 
     	//convert that data into an integer
     	int size = byteArrayToInt(sizeArray);	
+    	
+    	if(size > 20)
+    	{
+    		System.out.println("Bad size, the block that was retrieved was: " + inodeBuffer.getBlockID() + " and the block that was requested was: " + iNodeBlock);
+    	}
 
     	//release the inode
     	c.releaseBlock(inodeBuffer);

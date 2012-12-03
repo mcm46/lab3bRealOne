@@ -45,35 +45,48 @@ public class Cache extends DBufferCache
 		synchronized(this)
 		{
 			boolean foundBlock = false;
-
-
-			//find the block
-			for(int i = 0; i < myCacheSize; i++)
-			{
-				if(myCache.get(i).getBlockID() == blockID)
+			DBuffer searchBuffer;
+				//find the block
+				for(int i = 0; i < myCacheSize; i++)
 				{
-					//wait until this block is no longer held
-					while(myHeldBuffers.get(i))
+					searchBuffer = myCache.get(i);
+					if(searchBuffer.getBlockID() == blockID)
 					{
-						try
+						//wait until this block is no longer held
+						while(searchBuffer.BLOCK_HELD)
 						{
-							wait();
+							try
+							{
+								wait();
+							}
+							catch (InterruptedException e)
+							{
+								System.out.println("There was an error waiting in the getBlock() method.");
+							}
 						}
-						catch (InterruptedException e)
-						{
-							System.out.println("There was an error waiting in the getBlock() method.");
-						}
-					}
-					
-					buffer = myCache.remove(i);
-					myCache.addLast(buffer);
-					myHeldBuffers.remove(i);
-					myHeldBuffers.addLast(true);
-					foundBlock = true;
-					break;
-				}
 
-			}
+
+						//see if the queue has shifted, if the block is not in the queue 
+						//anymore then we can't return it so move on
+						
+						if(myCache.indexOf(searchBuffer) != -1)
+						{
+							foundBlock = false;
+							break;
+						}
+
+						if(searchBuffer.getBlockID() != blockID)
+						{
+							System.out.println("Error in cache: Requested block id " + blockID + " and got block with ID " + buffer.getBlockID());
+						}
+
+						myCache.addLast(searchBuffer);
+						foundBlock = true;
+						buffer = searchBuffer;
+						break;
+					}
+
+				}
 
 			//if the block is in the cache
 			if(foundBlock)
@@ -86,7 +99,7 @@ public class Cache extends DBufferCache
 				for(int i = 0; i < myCacheSize; i++)	//iterate this way to make sure we start from the front (I'm not sure how java iterators work)
 				{
 					//look for a block that is not held and is not busy (may be redundant)
-					if(!myCache.get(i).isBusy() && !myHeldBuffers.get(i))
+					if(!myCache.get(i).isBusy() && !myCache.get(i).BLOCK_HELD)
 					{
 						//write back the buffer if it is valid and not clean
 						if(!myCache.get(i).checkClean() && myCache.get(i).checkValid())
@@ -97,19 +110,21 @@ public class Cache extends DBufferCache
 
 						//evict the buffer and create a new one for this request
 						myCache.remove(i);
-						myHeldBuffers.remove(i);
 						myCache.addLast(new Buffer(blockID, Constants.BLOCK_SIZE));
-						myHeldBuffers.addLast(true);
 						foundBlock = true;
 						buffer = myCache.peekLast();
+						if(buffer.getBlockID() != blockID)
+						{
+							System.out.println("Error in cache2: Requested block id " + blockID + " and got block with ID " + buffer.getBlockID());
+						}
 						break;
 					}
 				}
 
 				//if none of the blocks fit the criterion, wait until a block is freed
 				if(!foundBlock)
-				{
-					while(myHeldBuffers.indexOf(false) != -1)
+				{					
+					while(findFreeBlock() == -1)
 					{
 						try
 						{
@@ -121,12 +136,13 @@ public class Cache extends DBufferCache
 					}
 
 					//now that we know a block is free, find it, write it back and evict it
-					int index = myHeldBuffers.indexOf(false);
-					myHeldBuffers.remove(index);
-					DBuffer removeBuffer = myCache.remove(index);
+					DBuffer removeBuffer = myCache.remove(findFreeBlock());
 					myCache.addLast(new Buffer(blockID, Constants.BLOCK_SIZE));
-					myHeldBuffers.addLast(true);
-
+					buffer = myCache.peekLast();
+					if(buffer.getBlockID() != blockID)
+					{
+						System.out.println("Error in cache3: Requested block id " + blockID + " and got block with ID " + buffer.getBlockID());
+					}
 					//write back the contents of the removed buffer if need be
 					if(!removeBuffer.checkClean() && removeBuffer.checkValid())
 					{
@@ -139,8 +155,24 @@ public class Cache extends DBufferCache
 		//get the data into this block
 		buffer.startFetch();
 		buffer.waitClean();
+		buffer.BLOCK_HELD = true;
 
 		return buffer;
+	}
+	
+	private int findFreeBlock()
+	{
+		int index = -1;
+		
+		for(DBuffer buff : myCache)
+		{
+			if(!buff.BLOCK_HELD)
+			{
+				index = myCache.indexOf(buff);
+			}
+		}
+		
+		return index;
 	}
 
 	@Override
@@ -150,10 +182,9 @@ public class Cache extends DBufferCache
 		int index = myCache.indexOf(buf);
 		
 		//update the lists to reflect that this block is now the most recently used
-		myHeldBuffers.remove(index);
-		myHeldBuffers.addLast(false);
 		DBuffer buffer = myCache.remove(index);
 		myCache.addLast(buffer);
+		buffer.BLOCK_HELD = false;
 		
 		notifyAll();
 	}
