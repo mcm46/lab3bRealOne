@@ -40,11 +40,9 @@ public class FileSystem extends DFS {
 
 
     @Override
-    public boolean format() {
-	
-	//ask vamsi about it tomorrow after class!
-	
-	return true;
+    public boolean format() 
+    {
+    	return true;
     }
 
     @Override

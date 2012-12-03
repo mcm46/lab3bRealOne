@@ -19,6 +19,7 @@ public class Main
 	
 	public static void main(String[] args)
 	{
+		
 		try {
 			myDisk = DVirtualDisk.getInstance();
 		} catch (IOException e) {
