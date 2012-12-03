@@ -39,99 +39,107 @@ public class Cache extends DBufferCache
 	
 
 	@Override
-	public synchronized DBuffer getBlock(int blockID)
+	public DBuffer getBlock(int blockID)
 	{
 		DBuffer buffer = null;
-		boolean foundBlock = false;
-
-
-		//find the block
-		for(int i = 0; i < myCacheSize; i++)
+		synchronized(this)
 		{
-			if(myCache.get(i).getBlockID() == blockID)
+			boolean foundBlock = false;
+
+
+			//find the block
+			for(int i = 0; i < myCacheSize; i++)
 			{
-				//wait until this block is no longer held
-				while(myHeldBuffers.get(i))
+				if(myCache.get(i).getBlockID() == blockID)
 				{
-					try
+					//wait until this block is no longer held
+					while(myHeldBuffers.get(i))
 					{
-						wait();
+						try
+						{
+							wait();
+						}
+						catch (InterruptedException e)
+						{
+							System.out.println("There was an error waiting in the getBlock() method.");
+						}
 					}
-					catch (InterruptedException e)
-					{
-						System.out.println("There was an error waiting in the getBlock() method.");
-					}
-				}
-				buffer = myCache.remove(i);
-				myCache.addLast(buffer);
-				myHeldBuffers.remove(i);
-				myHeldBuffers.addLast(true);
-				foundBlock = true;
-				break;
-			}
-
-		}
-
-		//if the block is in the cache
-		if(foundBlock)
-		{
-			return buffer;
-		}
-		else
-		{
-			//block is not in the cache, we need to evict an old one to make room for this new data
-			for(int i = 0; i < myCacheSize; i++)	//iterate this way to make sure we start from the front (I'm not sure how java iterators work)
-			{
-				//look for a block that is not held and is not busy (may be redundant)
-				if(!myCache.get(i).isBusy() && !myHeldBuffers.get(i))
-				{
-					//write back the buffer if it is valid and not clean
-					if(!myCache.get(i).checkClean() && myCache.get(i).checkValid())
-					{
-						myCache.get(i).startPush();
-					}
-
-
-					//evict the buffer and create a new one for this request
-					myCache.remove(i);
+					buffer = myCache.remove(i);
+					myCache.addLast(buffer);
 					myHeldBuffers.remove(i);
-					myCache.addLast(new Buffer(blockID, Constants.BLOCK_SIZE));
 					myHeldBuffers.addLast(true);
 					foundBlock = true;
 					break;
 				}
+
 			}
 
-			//if none of the blocks fit the criterion, wait until a block is freed
-			if(!foundBlock)
+			//if the block is in the cache
+			if(foundBlock)
 			{
-				while(myHeldBuffers.indexOf(false) != -1)
+				return buffer;
+			}
+			else
+			{
+				//block is not in the cache, we need to evict an old one to make room for this new data
+				for(int i = 0; i < myCacheSize; i++)	//iterate this way to make sure we start from the front (I'm not sure how java iterators work)
 				{
-					try
+					//look for a block that is not held and is not busy (may be redundant)
+					if(!myCache.get(i).isBusy() && !myHeldBuffers.get(i))
 					{
-						wait();
-					} catch (InterruptedException e)
-					{
-						System.out.println("There was an error waiting in the getBlock() method at the second wait.");
+						//write back the buffer if it is valid and not clean
+						if(!myCache.get(i).checkClean() && myCache.get(i).checkValid())
+						{
+							myCache.get(i).startPush();
+						}
+
+
+						//evict the buffer and create a new one for this request
+						myCache.remove(i);
+						myHeldBuffers.remove(i);
+						myCache.addLast(new Buffer(blockID, Constants.BLOCK_SIZE));
+						myHeldBuffers.addLast(true);
+						foundBlock = true;
+						buffer = myCache.peekLast();
+						break;
 					}
 				}
 
-				//now that we know a block is free, find it, write it back and evict it
-				int index = myHeldBuffers.indexOf(false);
-				myHeldBuffers.remove(index);
-				buffer = myCache.remove(index);
-				myCache.addLast(new Buffer(blockID, Constants.BLOCK_SIZE));
-				myHeldBuffers.addLast(true);
-
-				//write back the contents of the removed buffer if need be
-				if(!buffer.checkClean() && buffer.checkValid())
+				//if none of the blocks fit the criterion, wait until a block is freed
+				if(!foundBlock)
 				{
-					buffer.startPush();
-				}
-			}
+					while(myHeldBuffers.indexOf(false) != -1)
+					{
+						try
+						{
+							wait();
+						} catch (InterruptedException e)
+						{
+							System.out.println("There was an error waiting in the getBlock() method at the second wait.");
+						}
+					}
 
-			return myCache.peekLast();
+					//now that we know a block is free, find it, write it back and evict it
+					int index = myHeldBuffers.indexOf(false);
+					myHeldBuffers.remove(index);
+					DBuffer removeBuffer = myCache.remove(index);
+					myCache.addLast(new Buffer(blockID, Constants.BLOCK_SIZE));
+					myHeldBuffers.addLast(true);
+
+					//write back the contents of the removed buffer if need be
+					if(!removeBuffer.checkClean() && removeBuffer.checkValid())
+					{
+						removeBuffer.startPush();
+					}
+				}
+
+			}
 		}
+		//get the data into this block
+		buffer.startFetch();
+		buffer.waitClean();
+
+		return buffer;
 	}
 
 	@Override
