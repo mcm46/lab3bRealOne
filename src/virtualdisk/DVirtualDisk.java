@@ -8,8 +8,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import common.Constants.DiskOperationType;
 import common.Constants;
+import common.Constants.DiskOperationType;
 
 import dblockcache.DBuffer;
 import dfs.FileSystem;
