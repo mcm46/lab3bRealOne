@@ -176,7 +176,7 @@ public class Cache extends DBufferCache
 						System.out.println("There was an error waiting in the sync() method.");
 					}
 				}
-				
+				System.out.println("Syncing Block: "+buffer.getBlockID());
 				buffer.startPush();
 				buffer.waitClean();
 			}

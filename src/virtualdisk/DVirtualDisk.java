@@ -2,7 +2,9 @@ package virtualdisk;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -20,8 +22,8 @@ public class DVirtualDisk extends VirtualDisk
 	public static int inodeSize=212;
 	public static int iNodesPerBlock;
 	
-	private ConcurrentLinkedQueue<DBuffer> buffers;
-	private ConcurrentLinkedQueue<DiskOperationType> operations; 
+	private ConcurrentLinkedQueue<Map<DBuffer,DiskOperationType>> requests;
+
 	
 	/*
 	 * If there is not an instance of the virtual disk, create a new one. If there is one, return it.
@@ -115,8 +117,7 @@ public class DVirtualDisk extends VirtualDisk
 	private DVirtualDisk() throws FileNotFoundException, IOException
 	{
 		super();
-		buffers = new ConcurrentLinkedQueue<DBuffer>();
-		operations = new ConcurrentLinkedQueue<DiskOperationType>();
+		requests= new ConcurrentLinkedQueue<Map<DBuffer,DiskOperationType>>();
 		iNodesPerBlock= Constants.BLOCK_SIZE/inodeSize;
 		iNodeBlocks=Constants.MAX_FILES/iNodesPerBlock;
 		populateBitmap();
@@ -125,8 +126,7 @@ public class DVirtualDisk extends VirtualDisk
 	private DVirtualDisk(String volName, boolean format) throws IOException
 	{
 		super(volName, format);
-		buffers = new ConcurrentLinkedQueue<DBuffer>();
-		operations = new ConcurrentLinkedQueue<DiskOperationType>();
+		requests= new ConcurrentLinkedQueue<Map<DBuffer,DiskOperationType>>();
 		iNodesPerBlock= Constants.BLOCK_SIZE/inodeSize;
 		iNodeBlocks=Constants.MAX_FILES/iNodesPerBlock;
 		populateBitmap();
@@ -135,8 +135,7 @@ public class DVirtualDisk extends VirtualDisk
 	private DVirtualDisk(boolean format) throws IOException
 	{
 		super(format);
-		buffers = new ConcurrentLinkedQueue<DBuffer>();
-		operations = new ConcurrentLinkedQueue<DiskOperationType>();
+		requests= new ConcurrentLinkedQueue<Map<DBuffer,DiskOperationType>>();
 		iNodesPerBlock= Constants.BLOCK_SIZE/inodeSize;
 		iNodeBlocks=Constants.MAX_FILES/iNodesPerBlock;
 		populateBitmap();
@@ -144,19 +143,28 @@ public class DVirtualDisk extends VirtualDisk
 	
 	public void executeRequests()
 	{
+		int c=0;
 		while(true)
 		{
-			if (buffers.isEmpty())
+			if (requests.isEmpty())
 			{
 				continue;
 			}
-			DBuffer buf=buffers.poll();
-			DiskOperationType operation= operations.poll();
+			Map<DBuffer,DiskOperationType> map=requests.poll();
+			Set<DBuffer> key= map.keySet();
+			DBuffer buf=null;
+			for(DBuffer buffer : key)
+			{
+				buf=buffer;
+			}
+			DiskOperationType operation = map.get(buf);
+			c++;
+			System.out.println(c+"--  Polled: "+buf.getBlockID() + " Type: "+operation);
+			
 			if (operation==DiskOperationType.WRITE)
 			{
 				try {
 					writeBlock(buf);
-					
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -179,8 +187,9 @@ public class DVirtualDisk extends VirtualDisk
 	public void startRequest(DBuffer buf, DiskOperationType operation)
 			throws IllegalArgumentException, IOException
 	{
-		buffers.add(buf);
-		operations.add(operation);
+		Map<DBuffer,DiskOperationType> request= new HashMap<DBuffer,DiskOperationType>();
+		request.put(buf, operation);
+		requests.add(request);
 	}
 	
 
