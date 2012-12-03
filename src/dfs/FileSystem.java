@@ -227,7 +227,8 @@ public class FileSystem extends DFS {
     					    byte [] pointerForFreeArray = new byte[4];
     					    for (int ww=0; ww<4; ww++)
     							{
-    					    			pointerForFreeArray[ww] = inodeBlockData[actualINodeStart + 12 + z * 4 + ww];
+    								pointerForFreeArray[ww] = inodeBlockData[actualINodeStart + 12 + z * 4 + ww];
+    								inodeBlockData[actualINodeStart + 12 + z * 4 + ww] = changePointer[ww];
     							}
     					    int pointerForFree = byteArrayToInt(pointerForFreeArray);
     					    DVirtualDisk.myBitmap.put(pointerForFree, false);
