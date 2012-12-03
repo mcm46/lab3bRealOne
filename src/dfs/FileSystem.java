@@ -175,10 +175,28 @@ public class FileSystem extends DFS {
     		byte [] changedTestHasFile = new byte [4];
     		changedTestHasFile = Arrays.copyOfRange(inodeBlockData, actualINodeStart,actualINodeStart + 4);
     		int hasFileInt = byteArrayToInt(changedTestHasFile);
+	    	ArrayList<Integer> blocksToFree = new ArrayList<Integer>();
     		if (hasFileInt == 1)
     		{
     		    needToOverwrite = true;
     		}
+    		
+		if (needToOverwrite)
+		{
+	   		byte [] changedSizeForFreeing = new byte [4];
+	   		changedSizeForFreeing = Arrays.copyOfRange(inodeBlockData, actualINodeStart + 8,actualINodeStart + 12);
+		    	int sizeForFreeingInt = byteArrayToInt(changedSizeForFreeing);
+		    	for (int ee=0; ee<sizeForFreeingInt; ee++)
+		    	{
+		    	    byte [] numArray = new byte[4];
+		    	    for (int ii=0; ii<4; ii++)
+		    	    {
+		    		numArray[ii] = inodeBlockData[actualINodeStart + 12 + ee * 4 + ii];
+		    	    }
+		    	    int pointerToFree = byteArrayToInt(numArray);
+		    	    blocksToFree.add(pointerToFree);
+		    	}
+		}
 
     		//write the data into the inode
     		for (int y=0; y<4; y++)
@@ -217,38 +235,26 @@ public class FileSystem extends DFS {
     					//create an integer in byte form to update the inode that this block is now part of the file
     					byte [] changePointer = new byte [4];
     					changePointer = toBytes(freeBlockNumber);
-
+    					
     					//write the inode block data
-    					if (!needToOverwrite)
+    					for (int yy=0; yy<4; yy++)
     					{
-    					    for (int yy=0; yy<4; yy++)
-    							{
-    					    			inodeBlockData[actualINodeStart + 12 + z * 4 + yy] = changePointer[yy];
-    							}
-    					}
-    					//there was a pointer there that we are going to overwrite, so we need to tell the bitmap that is free now
-    					//and write the inode block data
-    					else
-    					{
-    					    byte [] pointerForFreeArray = new byte[4];
-    					    for (int ww=0; ww<4; ww++)
-    							{
-    								pointerForFreeArray[ww] = inodeBlockData[actualINodeStart + 12 + z * 4 + ww];
-    								inodeBlockData[actualINodeStart + 12 + z * 4 + ww] = changePointer[ww];
-    							}
-    					    int pointerForFree = byteArrayToInt(pointerForFreeArray);
-    					    //free the pointer in the inode, and report to bitmap
-    					    if(pointerForFree != 0)
-    					    {
-    					    	DVirtualDisk.myBitmap.put(pointerForFree, false);
-    					    }
-    					}
+  			    			inodeBlockData[actualINodeStart + 12 + z * 4 + yy] = changePointer[yy];
+  					}
+
+    			    		
+    					
     					
     					//we're done writing to this block, release it and break out of the loop
     					c.releaseBlock(writeBlock);
     					break;
     				}
     			}
+    		}
+    		
+    		for (Integer blocksToF: blocksToFree)
+    		{
+    		    DVirtualDisk.myBitmap.put(blocksToF, false);
     		}
     		
     		//we're done writing, write the inode, release the inode and return how many bits are written, if there is an error 
