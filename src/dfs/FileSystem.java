@@ -167,6 +167,15 @@ public class FileSystem extends DFS {
     		changedHasFile = toBytes(1);
     		changedId = toBytes(dFID.getIntId());
     		changedSize = toBytes(numBlocksToUse);
+    		
+    		boolean needToOverwrite = false;
+    		byte [] changedTestHasFile = new byte [4];
+    		changedTestHasFile = Arrays.copyOfRange(inodeBlockData, actualINodeStart,actualINodeStart + 4);
+    		int hasFileInt = byteArrayToInt(changedTestHasFile);
+    		if (hasFileInt == 1)
+    		{
+    		    needToOverwrite = true;
+    		}
 
     		//write the data into the inode
     		for (int y=0; y<4; y++)
@@ -206,9 +215,22 @@ public class FileSystem extends DFS {
     					changePointer = toBytes(freeBlockNumber);
 
     					//write the inode block data
-    					for (int yy=0; yy<4; yy++)
+    					if (!needToOverwrite)
     					{
-    						inodeBlockData[actualINodeStart + 12 + z * 4 + yy] = changePointer[yy];
+    					    for (int yy=0; yy<4; yy++)
+    							{
+    					    			inodeBlockData[actualINodeStart + 12 + z * 4 + yy] = changePointer[yy];
+    							}
+    					}
+    					else
+    					{
+    					    byte [] pointerForFreeArray = new byte[4];
+    					    for (int ww=0; ww<4; ww++)
+    							{
+    					    			pointerForFreeArray[ww] = inodeBlockData[actualINodeStart + 12 + z * 4 + ww];
+    							}
+    					    int pointerForFree = byteArrayToInt(pointerForFreeArray);
+    					    DVirtualDisk.myBitmap.put(pointerForFree, false);
     					}
     					
     					//we're done writing to this block, release it and break out of the loop
