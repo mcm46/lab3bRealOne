@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import virtualdisk.DVirtualDisk;
@@ -16,10 +17,17 @@ public class Main
 	private static Cache myCache;
 	private static DVirtualDisk myDisk;
 	private static FileSystem myFileSystem;
+	private static ArrayList<Thread> myThreads;
+	private static int numThreads=100;
+	
+	private static void addThread(Thread t)
+	{
+		myThreads.add(t);
+	}
 	
 	public static void main(String[] args)
 	{
-		
+		myThreads=new ArrayList<Thread>();
 		try {
 			myDisk = DVirtualDisk.getInstance();
 		} catch (IOException e) {
@@ -32,11 +40,14 @@ public class Main
 		
 		DiskThread thread = new DiskThread();
 		
+		
 		thread.start();
 		
-		for(int i = 0; i < 200; i++)
+		for(int i = 0; i < numThreads; i++)
 		{
-			new ThreadTester(i).start();
+			Thread t = new ThreadTester(i);
+			addThread(t);
+			t.start();
 		}
 		
 		
@@ -85,8 +96,16 @@ public class Main
 ////		myFileSystem.read(new DFileID(1), test, 0, Constants.BLOCK_SIZE * 4);
 ////		myFileSystem.read(new DFileID(150), test, 0, Constants.BLOCK_SIZE * 4);
 
-		
-		//myCache.sync();
+		for (int i=0;i<numThreads;i++)
+		{
+			try {
+				myThreads.get(i).join();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		myCache.sync();
 		
 			
 		

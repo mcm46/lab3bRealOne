@@ -20,10 +20,9 @@ public class FileSystem extends DFS {
     private static FileSystem mySingleton;
     public HashMap<Integer, Boolean> availFileId = new HashMap<Integer, Boolean>();
     private ArrayList<DFileID> allFiles = new ArrayList<DFileID>();
-    private final ReentrantReadWriteLock myReentrantLock = new ReentrantReadWriteLock();
-    //the lock to acquire when reading
-    private final Lock readLock = myReentrantLock.readLock();
-    private final Lock writeLock = myReentrantLock.writeLock();
+    //lock arrays to enforce only one thread can write to a specific fileID at once
+    private Lock [] readLockArray = new Lock [Constants.MAX_FILES];
+    private Lock [] writeLockArray = new Lock [Constants.MAX_FILES];
 
     public FileSystem()
     {
@@ -53,13 +52,17 @@ public class FileSystem extends DFS {
 
     @Override
     public synchronized DFileID createDFile() {
+	ReentrantReadWriteLock myReentrantLock = new ReentrantReadWriteLock();
 	for (int x=0; x<Constants.MAX_FILES; x++)
 	{
 	    if (availFileId.get(x) == false)
 	    {
+
 		DFileID id = new DFileID(x);
 		availFileId.put(x, true);
 		allFiles.add(id);
+		readLockArray[x] = myReentrantLock.readLock();
+		writeLockArray[x] = myReentrantLock.writeLock();
 		return id;
 	    }
 	}
@@ -76,7 +79,7 @@ public class FileSystem extends DFS {
     @Override
     public int read(DFileID dFID, byte[] buffer, int startOffset, int count) 
     {
-	readLock.lock();
+	readLockArray[dFID.getIntId()].lock();
     	try
     	{
     		//get the cache instance
@@ -131,20 +134,22 @@ public class FileSystem extends DFS {
     		//release the inode block, return the number of bytes written, if there is 
     		//an exception catch it and return -1
     		c.releaseBlock(inodeBuffer);
-    		readLock.unlock();
+    		readLockArray[dFID.getIntId()].unlock();
     		return count;
     	}
     	catch(Exception e)
     	{
-    	    	readLock.unlock();
+    	    	readLockArray[dFID.getIntId()].unlock();
     		return -1;
     	}
     }
+    
+    //declare an array
 
     @Override
-    public synchronized int write(DFileID dFID, byte[] buffer, int startOffset, int count) 
+    public int write(DFileID dFID, byte[] buffer, int startOffset, int count) 
     {
-	writeLock.lock();
+	writeLockArray[dFID.getIntId()].lock();
     	try
     	{
     		//get the cache instance
@@ -270,13 +275,13 @@ public class FileSystem extends DFS {
     		//catch it and return -1
     		inodeBuffer.write(inodeBlockData, 0, Constants.BLOCK_SIZE);
     		c.releaseBlock(inodeBuffer);
-    		writeLock.unlock();
+    		writeLockArray[dFID.getIntId()].unlock();
     		return count;
     	}
     	catch(Exception e)
     	{
     		System.out.println("There was an error writing the file: " + e.getLocalizedMessage());
-    		writeLock.unlock();
+    		writeLockArray[dFID.getIntId()].unlock();
     		return -1;
     	}
     }
