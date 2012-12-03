@@ -51,39 +51,36 @@ public class DVirtualDisk extends VirtualDisk
 		{
 			for (int j=0;j<iNodesPerBlock*inodeSize;j+=inodeSize)
 			{
-				boolean setFileUsed=false;
 				for (int k=0;k<inodeSize;k+=4)
 				{
+					//Set new empty byte array for reading
 					byte[] b = new byte[4];
 					try {
+						//Get the next 4 bytes from the file
 						int seekLen = i+j+k;
 						_file.seek(seekLen);
 						_file.read(b, 0, 4);
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
+					//Set 'id' to the int representation of those bytes
 					int id=byteArrayToInt(b);
 					switch(k)
 					{
 						case(0):
 						{
-							if(id!=0)
-							{
-								setFileUsed=true;
-							}
-							break;
+							continue;
 						}
 						case(4):
 						{
-							if(setFileUsed)
+							if (id!=0)
 							{
 								FileSystem fs= FileSystem.getInstance();
 								fs.availFileId.put(id,true);
-								setFileUsed=false;
 							}
 							break;
 						}
-						case(12):
+						case(8):
 						{
 							continue;
 						}
