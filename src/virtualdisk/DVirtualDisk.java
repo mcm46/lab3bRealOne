@@ -2,8 +2,8 @@ package virtualdisk;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import common.Constants.DiskOperationType;
@@ -42,7 +42,7 @@ public class DVirtualDisk extends VirtualDisk
 	 */
 	private void populateBitmap()
 	{
-		myBitmap= new HashMap<Integer,Boolean>();
+		myBitmap= new TreeMap<Integer,Boolean>();
 		for(int i=iNodeBlocks+1;i<Constants.NUM_OF_BLOCKS;i++)
 		{
 			myBitmap.put(i,false);
