@@ -50,17 +50,15 @@ public class DVirtualDisk extends VirtualDisk
 				boolean setFileUsed=false;
 				for (int k=0;k<inodeSize;k+=4)
 				{
-
 					byte[] b = new byte[4];
 					try {
-						System.out.println(i+j+k);
-						_file.read(b, i+j+k, 4);
+						int seekLen = i+j+k;
+						_file.seek(seekLen);
+						_file.read(b, 0, 4);
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					int id=byteArrayToInt(b);
-					
 					switch(k)
 					{
 						case(0):
@@ -116,8 +114,8 @@ public class DVirtualDisk extends VirtualDisk
 	private DVirtualDisk() throws FileNotFoundException, IOException
 	{
 		super();
-		buffers = new ConcurrentLinkedQueue();
-		operations = new ConcurrentLinkedQueue();
+		buffers = new ConcurrentLinkedQueue<DBuffer>();
+		operations = new ConcurrentLinkedQueue<DiskOperationType>();
 		iNodesPerBlock= Constants.BLOCK_SIZE/inodeSize;
 		iNodeBlocks=Constants.MAX_FILES/iNodesPerBlock;
 		populateBitmap();
@@ -126,8 +124,8 @@ public class DVirtualDisk extends VirtualDisk
 	private DVirtualDisk(String volName, boolean format) throws IOException
 	{
 		super(volName, format);
-		buffers = new ConcurrentLinkedQueue();
-		operations = new ConcurrentLinkedQueue();
+		buffers = new ConcurrentLinkedQueue<DBuffer>();
+		operations = new ConcurrentLinkedQueue<DiskOperationType>();
 		iNodesPerBlock= Constants.BLOCK_SIZE/inodeSize;
 		iNodeBlocks=Constants.MAX_FILES/iNodesPerBlock;
 		populateBitmap();
@@ -136,8 +134,8 @@ public class DVirtualDisk extends VirtualDisk
 	private DVirtualDisk(boolean format) throws IOException
 	{
 		super(format);
-		buffers = new ConcurrentLinkedQueue();
-		operations = new ConcurrentLinkedQueue();
+		buffers = new ConcurrentLinkedQueue<DBuffer>();
+		operations = new ConcurrentLinkedQueue<DiskOperationType>();
 		iNodesPerBlock= Constants.BLOCK_SIZE/inodeSize;
 		iNodeBlocks=Constants.MAX_FILES/iNodesPerBlock;
 		populateBitmap();
