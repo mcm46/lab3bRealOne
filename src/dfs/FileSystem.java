@@ -20,7 +20,6 @@ public class FileSystem extends DFS {
     private static FileSystem mySingleton;
     public HashMap<Integer, Boolean> availFileId = new HashMap<Integer, Boolean>();
     private ArrayList<DFileID> allFiles = new ArrayList<DFileID>();
-    private final ReentrantReadWriteLock myReentrantLock = new ReentrantReadWriteLock();
     //lock arrays to enforce only one thread can write to a specific fileID at once
     private Lock [] readLockArray = new Lock [Constants.MAX_FILES];
     private Lock [] writeLockArray = new Lock [Constants.MAX_FILES];
@@ -53,6 +52,7 @@ public class FileSystem extends DFS {
 
     @Override
     public synchronized DFileID createDFile() {
+	ReentrantReadWriteLock myReentrantLock = new ReentrantReadWriteLock();
 	for (int x=0; x<Constants.MAX_FILES; x++)
 	{
 	    if (availFileId.get(x) == false)
