@@ -46,7 +46,7 @@ public class ThreadTester extends Thread
 			
 			if(!Arrays.equals(test, testBuffer) || myFileSystem.sizeDFile(fID) != fileSize / Constants.BLOCK_SIZE)
 			{
-				System.out.println("Failed on file: " + myID + "in thread: " + myID + " with size: " + myFileSystem.sizeDFile(fID));
+				System.out.println("Failed on file: " + myID + " in thread: " + myID + " with size: " + myFileSystem.sizeDFile(fID));
 			}
 			else
 			{
