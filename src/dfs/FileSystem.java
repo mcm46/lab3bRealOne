@@ -1,9 +1,7 @@
 package dfs;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -13,6 +11,7 @@ import virtualdisk.DVirtualDisk;
 
 import common.Constants;
 import common.DFileID;
+
 import dblockcache.Cache;
 import dblockcache.DBuffer;
 
