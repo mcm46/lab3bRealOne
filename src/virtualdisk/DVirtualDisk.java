@@ -22,19 +22,24 @@ public class DVirtualDisk extends VirtualDisk
 	
 	private ConcurrentLinkedQueue<DBuffer> buffers;
 	private ConcurrentLinkedQueue<DiskOperationType> operations; 
-		
+	
+	/*
+	 * If there is not an instance of the virtual disk, create a new one. If there is one, return it.
+	 */
 	public static synchronized DVirtualDisk getInstance() throws IOException
 	{
 
 		if(mySingleton == null)
 		{
-			mySingleton = new DVirtualDisk();
+			mySingleton = new DVirtualDisk(true);
 		}
 		
 		return mySingleton;
 	}
 	
-
+	/*
+	 * Populate the bitmap with what blocks are free or taken. False is free, true is filled
+	 */
 	private void populateBitmap()
 	{
 		myBitmap= new HashMap<Integer,Boolean>();
@@ -154,6 +159,7 @@ public class DVirtualDisk extends VirtualDisk
 			{
 				try {
 					writeBlock(buf);
+					
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
