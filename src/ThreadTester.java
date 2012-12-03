@@ -9,7 +9,7 @@ public class ThreadTester extends Thread
 {
 	public int myID;
 	private FileSystem myFileSystem;
-	private int fileSize = Constants.BLOCK_SIZE * 2;
+	private int fileSize = Constants.BLOCK_SIZE * 4;
 	
 	public ThreadTester(int id)
 	{

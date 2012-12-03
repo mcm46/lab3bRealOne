@@ -18,7 +18,7 @@ public class Main
 	private static DVirtualDisk myDisk;
 	private static FileSystem myFileSystem;
 	private static ArrayList<Thread> myThreads;
-	private static int numThreads=200;
+	private static int numThreads=500;
 	
 	private static void addThread(Thread t)
 	{
