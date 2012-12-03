@@ -58,48 +58,7 @@ public class Main
 		byte[] testBufferRead = new byte[Constants.BLOCK_SIZE * 4];
 		
 		myFileSystem.read(new DFileID(2), testBufferRead, 0, Constants.BLOCK_SIZE * 4);
-//		//construct the disk
-//		try {
-//			myDisk = DVirtualDisk.getInstance();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		
-//		//start the disk execute thread
-//		DiskThread thread = new DiskThread();
-//		thread.start();
-//		
-//		Buffer test = new Buffer(2, Constants.BLOCK_SIZE);
-//		
-//		test.startFetch();
-//		test.waitClean();
-//		
-//		byte[] test2 = new byte[Constants.BLOCK_SIZE];
-//		
-//		byte[] write = new byte[Constants.BLOCK_SIZE];
-//		
-//		for(int i = 0; i < write.length; i++)
-//		{
-//			write[i] = -1;
-//		}
-//		
-//		test.write(write, 0, Constants.BLOCK_SIZE);
-//		
-//		test.startPush();
-//		
-//		test.waitClean();
-//		
-//		Buffer test3 = new Buffer(2, Constants.BLOCK_SIZE);
-//		
-//		test3.startFetch();
-//		test3.waitClean();
-//		
-//		test3.read(test2, 0, Constants.BLOCK_SIZE);
-//		
-//		for(int i = 0; i < test2.length; i++)
-//		{
-//			System.out.print(test2[i]);
-//		}
+		
+		myCache.sync();
 	}
 }
