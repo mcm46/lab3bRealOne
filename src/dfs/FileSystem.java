@@ -222,6 +222,8 @@ public class FileSystem extends DFS {
     					    			inodeBlockData[actualINodeStart + 12 + z * 4 + yy] = changePointer[yy];
     							}
     					}
+    					//there was a pointer there that we are going to overwrite, so we need to tell the bitmap that is free now
+    					//and write the inode block data
     					else
     					{
     					    byte [] pointerForFreeArray = new byte[4];
