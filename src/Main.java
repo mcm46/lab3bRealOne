@@ -40,6 +40,7 @@ public class Main
 		
 		DiskThread thread = new DiskThread();
 		
+		
 		thread.start();
 		
 		for(int i = 0; i < numThreads; i++)
