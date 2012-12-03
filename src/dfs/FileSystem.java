@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import virtualdisk.DVirtualDisk;
 
@@ -19,6 +21,10 @@ public class FileSystem extends DFS {
     private static FileSystem mySingleton;
     public HashMap<Integer, Boolean> availFileId = new HashMap<Integer, Boolean>();
     private ArrayList<DFileID> allFiles = new ArrayList<DFileID>();
+    private final ReentrantReadWriteLock myReentrantLock = new ReentrantReadWriteLock();
+    //the lock to acquire when reading
+    private final Lock readLock = myReentrantLock.readLock();
+    private final Lock writeLock = myReentrantLock.writeLock();
 
     public FileSystem()
     {
@@ -71,6 +77,7 @@ public class FileSystem extends DFS {
     @Override
     public int read(DFileID dFID, byte[] buffer, int startOffset, int count) 
     {
+	readLock.lock();
     	try
     	{
     		//get the cache instance
@@ -125,10 +132,12 @@ public class FileSystem extends DFS {
     		//release the inode block, return the number of bytes written, if there is 
     		//an exception catch it and return -1
     		c.releaseBlock(inodeBuffer);
+    		readLock.unlock();
     		return count;
     	}
     	catch(Exception e)
     	{
+    	    	readLock.unlock();
     		return -1;
     	}
     }
@@ -136,6 +145,7 @@ public class FileSystem extends DFS {
     @Override
     public synchronized int write(DFileID dFID, byte[] buffer, int startOffset, int count) 
     {
+	writeLock.lock();
     	try
     	{
     		//get the cache instance
@@ -261,11 +271,13 @@ public class FileSystem extends DFS {
     		//catch it and return -1
     		inodeBuffer.write(inodeBlockData, 0, Constants.BLOCK_SIZE);
     		c.releaseBlock(inodeBuffer);
+    		writeLock.unlock();
     		return count;
     	}
     	catch(Exception e)
     	{
     		System.out.println("There was an error writing the file: " + e.getLocalizedMessage());
+    		writeLock.unlock();
     		return -1;
     	}
     }
