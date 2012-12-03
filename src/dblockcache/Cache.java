@@ -64,6 +64,7 @@ public class Cache extends DBufferCache
 							System.out.println("There was an error waiting in the getBlock() method.");
 						}
 					}
+					
 					buffer = myCache.remove(i);
 					myCache.addLast(buffer);
 					myHeldBuffers.remove(i);

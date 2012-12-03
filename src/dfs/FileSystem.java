@@ -48,7 +48,7 @@ public class FileSystem extends DFS {
     }
 
     @Override
-    public DFileID createDFile() {
+    public synchronized DFileID createDFile() {
 	for (int x=0; x<Constants.MAX_FILES; x++)
 	{
 	    if (availFileId.get(x) == false)
@@ -63,7 +63,7 @@ public class FileSystem extends DFS {
     }
 
     @Override
-    public void destroyDFile(DFileID dFID) {
+    public synchronized void destroyDFile(DFileID dFID) {
 	int x = dFID.getIntId();
 	availFileId.put(x, false);
 	allFiles.remove(dFID);
@@ -135,7 +135,7 @@ public class FileSystem extends DFS {
     }
 
     @Override
-    public int write(DFileID dFID, byte[] buffer, int startOffset, int count) 
+    public synchronized int write(DFileID dFID, byte[] buffer, int startOffset, int count) 
     {
     	try
     	{
@@ -265,7 +265,7 @@ public class FileSystem extends DFS {
     	}
     	catch(Exception e)
     	{
-    		System.out.println("There was an error writing the file.");
+    		System.out.println("There was an error writing the file: " + e.getLocalizedMessage());
     		return -1;
     	}
     }
