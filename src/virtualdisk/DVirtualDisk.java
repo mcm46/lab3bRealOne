@@ -106,7 +106,7 @@ public class DVirtualDisk extends VirtualDisk
 			}
 			
 		}
-		//System.out.println(myBitmap);
+		FileSystem fs = FileSystem.getInstance();
 	}
 	
 	//Helper function

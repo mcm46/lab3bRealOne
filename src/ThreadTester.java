@@ -35,7 +35,6 @@ public class ThreadTester extends Thread
 		
 		
 
-		
 			byte[] test = new byte[fileSize];
 		
 			DFileID fID=myFileSystem.createDFile();

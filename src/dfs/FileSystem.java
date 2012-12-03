@@ -57,6 +57,7 @@ public class FileSystem extends DFS {
 	{
 	    if (availFileId.get(x) == false)
 	    {
+
 		DFileID id = new DFileID(x);
 		availFileId.put(x, true);
 		allFiles.add(id);
