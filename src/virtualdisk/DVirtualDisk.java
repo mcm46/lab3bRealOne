@@ -39,6 +39,12 @@ public class DVirtualDisk extends VirtualDisk
 		return mySingleton;
 	}
 	
+	public static boolean format()
+	{
+		formatStore();
+		return true;
+	}
+	
 	/*
 	 * Populate the bitmap with what blocks are free or taken. False is free, true is filled
 	 */

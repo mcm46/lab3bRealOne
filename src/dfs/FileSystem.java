@@ -1,5 +1,6 @@
 package dfs;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,7 +43,7 @@ public class FileSystem extends DFS {
     @Override
     public boolean format() 
     {
-    	return true;
+    	return DVirtualDisk.format();
     }
 
     @Override

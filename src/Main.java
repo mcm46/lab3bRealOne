@@ -28,7 +28,6 @@ public class Main
 		}
 		
 		myFileSystem = FileSystem.getInstance();
-		
 		myCache = Cache.getInstance();
 		
 		DiskThread thread = new DiskThread();
