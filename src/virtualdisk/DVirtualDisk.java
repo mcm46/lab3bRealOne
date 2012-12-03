@@ -2,6 +2,7 @@ package virtualdisk;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -31,7 +32,7 @@ public class DVirtualDisk extends VirtualDisk
 
 		if(mySingleton == null)
 		{
-			mySingleton = new DVirtualDisk();
+			mySingleton = new DVirtualDisk(false);
 		}
 		
 		return mySingleton;
@@ -146,7 +147,7 @@ public class DVirtualDisk extends VirtualDisk
 	{
 		while(true)
 		{
-			if (buffers.isEmpty())
+			if (buffers.isEmpty() && operations.isEmpty())
 			{
 				continue;
 			}

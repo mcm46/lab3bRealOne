@@ -3,11 +3,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-<<<<<<< HEAD
-import java.util.Map;
-=======
-
->>>>>>> branch 'master' of https://github.com/mcm46/lab3bRealOne.git
 
 import common.Constants;
 import common.DFileID;
@@ -62,17 +57,17 @@ public class Main
 			}
 		}
 		
-		myFileSystem.write(new DFileID(2), testBuffer, 0, Constants.BLOCK_SIZE * 4);
+		//myFileSystem.write(new DFileID(4), testBuffer, 0, Constants.BLOCK_SIZE * 4);
 		
 		//int testSize = myFileSystem.sizeDFile(new DFileID(3));
-		Buffer test2 = new Buffer(3, Constants.BLOCK_SIZE);
+		//Buffer test2 = new Buffer(3, Constants.BLOCK_SIZE);
 		
 		byte[] testBuffer2 = new byte[Constants.BLOCK_SIZE * 4];
 		
 		byte counter2 = 0;
 		for(int i = 0; i < Constants.BLOCK_SIZE * 4; i++)
 		{
-			testBuffer[i] = counter;
+			testBuffer2[i] = counter2;
 			
 			counter2++;
 			
@@ -82,7 +77,7 @@ public class Main
 			}
 		}
 		
-		myFileSystem.write(new DFileID(3), testBuffer2, 0, Constants.BLOCK_SIZE * 4);
+		//myFileSystem.write(new DFileID(3), testBuffer2, 0, Constants.BLOCK_SIZE * 4);
 		
 		//int testSize3 = myFileSystem.sizeDFile(new DFileID(3));
 		
@@ -100,7 +95,7 @@ public class Main
 //			}
 //		}
 //		
-		myFileSystem.read(new DFileID(2), test, 0, Constants.BLOCK_SIZE * 4);
+		myFileSystem.read(new DFileID(4), test, 0, Constants.BLOCK_SIZE * 4);
 		
 		byte[] testRead = new byte[Constants.BLOCK_SIZE*4];
 		myFileSystem.read(new DFileID(3), testRead, 0, Constants.BLOCK_SIZE * 4);
