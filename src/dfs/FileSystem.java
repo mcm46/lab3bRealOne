@@ -238,7 +238,10 @@ public class FileSystem extends DFS {
     							}
     					    int pointerForFree = byteArrayToInt(pointerForFreeArray);
     					    //free the pointer in the inode, and report to bitmap
-    					    DVirtualDisk.myBitmap.put(pointerForFree, false);
+    					    if(pointerForFree != 0)
+    					    {
+    					    	DVirtualDisk.myBitmap.put(pointerForFree, false);
+    					    }
     					}
     					
     					//we're done writing to this block, release it and break out of the loop
