@@ -69,7 +69,7 @@ public class Cache extends DBufferCache
 						//see if the queue has shifted, if the block is not in the queue 
 						//anymore then we can't return it so move on
 						
-						if(myCache.indexOf(searchBuffer) != -1)
+						if(myCache.indexOf(searchBuffer) == -1)
 						{
 							foundBlock = false;
 							break;

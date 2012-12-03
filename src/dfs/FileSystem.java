@@ -309,9 +309,10 @@ public class FileSystem extends DFS {
 
     	//get the data for the size integer
     	byte[] sizeArray = Arrays.copyOfRange(inodeBlockData, actualINodeStart + 8, actualINodeStart + 12);
-
+    	
     	//convert that data into an integer
-    	int size = byteArrayToInt(sizeArray);	
+    	int size = byteArrayToInt(sizeArray);
+    	System.out.println(size);
     	
     	if(size > 20)
     	{
