@@ -202,7 +202,7 @@ public class FileSystem extends DFS {
 
     					//update the disk to indicate that that block is now used
     					DVirtualDisk.myBitmap.put(freeBlockNumber, true);
-    					System.out.println(z + " " + DVirtualDisk.myBitmap);
+    					//System.out.println(z + " " + DVirtualDisk.myBitmap);
 
     					//write the correct part of the data to this buffer, check to see how much is left
     					if(buffer.length - (startOffset + Constants.BLOCK_SIZE * z) >= Constants.BLOCK_SIZE)

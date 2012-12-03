@@ -33,7 +33,7 @@ public class DVirtualDisk extends VirtualDisk
 
 		if(mySingleton == null)
 		{
-			mySingleton = new DVirtualDisk(false);
+			mySingleton = new DVirtualDisk();
 		}
 		
 		return mySingleton;
@@ -100,7 +100,7 @@ public class DVirtualDisk extends VirtualDisk
 			}
 			
 		}
-		System.out.println(myBitmap);
+		//System.out.println(myBitmap);
 	}
 	
 	//Helper function
@@ -159,7 +159,7 @@ public class DVirtualDisk extends VirtualDisk
 			}
 			DiskOperationType operation = map.get(buf);
 			c++;
-			System.out.println(c+"--  Polled: "+buf.getBlockID() + " Type: "+operation);
+			//System.out.println(c+"--  Polled: "+buf.getBlockID() + " Type: "+operation);
 			
 			if (operation==DiskOperationType.WRITE)
 			{
