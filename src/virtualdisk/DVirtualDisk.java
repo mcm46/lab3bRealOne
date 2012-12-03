@@ -31,7 +31,7 @@ public class DVirtualDisk extends VirtualDisk
 
 		if(mySingleton == null)
 		{
-			mySingleton = new DVirtualDisk(true);
+			mySingleton = new DVirtualDisk();
 		}
 		
 		return mySingleton;
