@@ -56,4 +56,9 @@ public abstract class DFS
 	 * List all the existing DFileIDs in the volume
 	 */
 	public abstract List<DFileID> listAllDFiles();
+	
+	/*
+	 *  Write back all dirty blocks to volume, and wait for completion.
+	 */
+	public abstract void sync();
 }

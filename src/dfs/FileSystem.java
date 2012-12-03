@@ -41,8 +41,10 @@ public class FileSystem extends DFS {
 
     @Override
     public boolean format() {
-	// TODO Auto-generated method stub
-	return false;
+	
+	//ask vamsi about it tomorrow after class!
+	
+	return true;
     }
 
     @Override
@@ -288,6 +290,13 @@ public class FileSystem extends DFS {
 	    value += (b[i] & 0x000000FF) << shift;
 	}
 	return value;
+    }
+
+
+    @Override
+    public void sync() {
+	Cache c = Cache.getInstance();
+	c.sync();
     }
 
 }
