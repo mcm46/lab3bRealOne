@@ -168,6 +168,9 @@ public class FileSystem extends DFS {
     		changedId = toBytes(dFID.getIntId());
     		changedSize = toBytes(numBlocksToUse);
     		
+    		
+    		//checking if there was a pointer there already, if so convert it to int
+    		//and set needToOverwrite to true
     		boolean needToOverwrite = false;
     		byte [] changedTestHasFile = new byte [4];
     		changedTestHasFile = Arrays.copyOfRange(inodeBlockData, actualINodeStart,actualINodeStart + 4);
@@ -233,6 +236,7 @@ public class FileSystem extends DFS {
     								inodeBlockData[actualINodeStart + 12 + z * 4 + ww] = changePointer[ww];
     							}
     					    int pointerForFree = byteArrayToInt(pointerForFreeArray);
+    					    //free the pointer in the inode, and report to bitmap
     					    DVirtualDisk.myBitmap.put(pointerForFree, false);
     					}
     					
