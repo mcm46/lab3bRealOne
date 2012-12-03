@@ -59,7 +59,6 @@ public class Buffer extends DBuffer
 	}
 
 	@Override
-	//just call the disk met
 	public synchronized void startPush()
 	{
 		try
