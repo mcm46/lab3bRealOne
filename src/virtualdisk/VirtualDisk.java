@@ -12,7 +12,7 @@ import dblockcache.DBuffer;
 public abstract class VirtualDisk
 {
 	private String _volName;
-	protected RandomAccessFile _file;
+	protected static RandomAccessFile _file;
 	private int _maxVolSize;
 
 	/*
@@ -64,7 +64,7 @@ public abstract class VirtualDisk
 	/*
 	 * Clear the contents of the disk by writing 0s to it
 	 */
-	private void formatStore() {
+	protected static void formatStore() {
 		byte b[] = new byte[Constants.BLOCK_SIZE];
 		setBuffer((byte) 0, b, Constants.BLOCK_SIZE);
 		for (int i = 0; i < Constants.NUM_OF_BLOCKS; i++) {
