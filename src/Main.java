@@ -18,7 +18,7 @@ public class Main
 	private static DVirtualDisk myDisk;
 	private static FileSystem myFileSystem;
 	private static ArrayList<Thread> myThreads;
-	private static int numThreads=512;
+	private static int numThreads=100;
 	
 	private static void addThread(Thread t)
 	{
@@ -39,6 +39,7 @@ public class Main
 		myCache = Cache.getInstance();
 		
 		DiskThread thread = new DiskThread();
+		
 		
 		thread.start();
 		

@@ -1,5 +1,6 @@
 package dfs;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,9 +21,16 @@ public class FileSystem extends DFS {
     private static FileSystem mySingleton;
     public HashMap<Integer, Boolean> availFileId = new HashMap<Integer, Boolean>();
     private ArrayList<DFileID> allFiles = new ArrayList<DFileID>();
+<<<<<<< HEAD
     //lock arrays to enforce only one thread can write to a specific fileID at once
     private Lock [] readLockArray = new Lock [Constants.MAX_FILES];
     private Lock [] writeLockArray = new Lock [Constants.MAX_FILES];
+=======
+    private final ReentrantReadWriteLock myReentrantLock = new ReentrantReadWriteLock();
+    //the lock to acquire when reading
+    private final Lock readLock = myReentrantLock.readLock();
+    private final Lock writeLock = myReentrantLock.writeLock();
+>>>>>>> changes
 
     public FileSystem()
     {
@@ -57,6 +65,7 @@ public class FileSystem extends DFS {
 	{
 	    if (availFileId.get(x) == false)
 	    {
+
 		DFileID id = new DFileID(x);
 		availFileId.put(x, true);
 		allFiles.add(id);
@@ -78,7 +87,11 @@ public class FileSystem extends DFS {
     @Override
     public int read(DFileID dFID, byte[] buffer, int startOffset, int count) 
     {
+<<<<<<< HEAD
 	readLockArray[dFID.getIntId()].lock();
+=======
+	readLock.lock();
+>>>>>>> changes
     	try
     	{
     		//get the cache instance
@@ -133,12 +146,20 @@ public class FileSystem extends DFS {
     		//release the inode block, return the number of bytes written, if there is 
     		//an exception catch it and return -1
     		c.releaseBlock(inodeBuffer);
+<<<<<<< HEAD
     		readLockArray[dFID.getIntId()].unlock();
+=======
+    		readLock.unlock();
+>>>>>>> changes
     		return count;
     	}
     	catch(Exception e)
     	{
+<<<<<<< HEAD
     	    	readLockArray[dFID.getIntId()].unlock();
+=======
+    	    	readLock.unlock();
+>>>>>>> changes
     		return -1;
     	}
     }
@@ -148,7 +169,11 @@ public class FileSystem extends DFS {
     @Override
     public int write(DFileID dFID, byte[] buffer, int startOffset, int count) 
     {
+<<<<<<< HEAD
 	writeLockArray[dFID.getIntId()].lock();
+=======
+	writeLock.lock();
+>>>>>>> changes
     	try
     	{
     		//get the cache instance
@@ -192,6 +217,7 @@ public class FileSystem extends DFS {
     		{
     		    needToOverwrite = true;
     		}
+    		
     		
 		if (needToOverwrite)
 		{
@@ -273,13 +299,21 @@ public class FileSystem extends DFS {
     		//catch it and return -1
     		inodeBuffer.write(inodeBlockData, 0, Constants.BLOCK_SIZE);
     		c.releaseBlock(inodeBuffer);
+<<<<<<< HEAD
     		writeLockArray[dFID.getIntId()].unlock();
+=======
+    		writeLock.unlock();
+>>>>>>> changes
     		return count;
     	}
     	catch(Exception e)
     	{
     		System.out.println("There was an error writing the file: " + e.getLocalizedMessage());
+<<<<<<< HEAD
     		writeLockArray[dFID.getIntId()].unlock();
+=======
+    		writeLock.unlock();
+>>>>>>> changes
     		return -1;
     	}
     }
@@ -307,9 +341,15 @@ public class FileSystem extends DFS {
 
     	//get the data for the size integer
     	byte[] sizeArray = Arrays.copyOfRange(inodeBlockData, actualINodeStart + 8, actualINodeStart + 12);
-
+    	
     	//convert that data into an integer
-    	int size = byteArrayToInt(sizeArray);	
+    	int size = byteArrayToInt(sizeArray);
+    	System.out.println(size);
+    	
+    	if(size > 20)
+    	{
+    		System.out.println("Bad size, the block that was retrieved was: " + inodeBuffer.getBlockID() + " and the block that was requested was: " + iNodeBlock);
+    	}
 
     	//release the inode
     	c.releaseBlock(inodeBuffer);

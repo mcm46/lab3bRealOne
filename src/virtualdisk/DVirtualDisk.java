@@ -33,7 +33,7 @@ public class DVirtualDisk extends VirtualDisk
 
 		if(mySingleton == null)
 		{
-			mySingleton = new DVirtualDisk();
+			mySingleton = new DVirtualDisk(true);
 		}
 		
 		return mySingleton;
@@ -106,7 +106,7 @@ public class DVirtualDisk extends VirtualDisk
 			}
 			
 		}
-		//System.out.println(myBitmap);
+		FileSystem fs = FileSystem.getInstance();
 	}
 	
 	//Helper function
